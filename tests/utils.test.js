@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  slugify, htmlToText, readingTime, makeExcerpt, filterPosts, paginate, relatedPosts, parseCsv, parseLines, toDate, formatDate,
+  slugify, htmlToText, readingTime, makeExcerpt, filterPosts, paginate, relatedPosts, parseCsv, parseLines, toDate, formatDate, newestFirst,
 } from '../src/shared/utils.js';
 
 describe('slugify', () => {
@@ -60,6 +60,17 @@ describe('relatedPosts', () => {
     expect(relatedPosts(a, all).map((p) => p.id)).toEqual(['c', 'b']);
   });
   it('respects the count', () => expect(relatedPosts(a, all, 1)).toHaveLength(1));
+});
+
+describe('newestFirst', () => {
+  it('sorts Firestore-like timestamps, ISO strings and undated items newest first', () => {
+    const items = [
+      { id: 'old', createdAt: { toDate: () => new Date('2026-01-01') } },
+      { id: 'none' },
+      { id: 'new', createdAt: '2026-11-07' },
+    ];
+    expect([...items].sort(newestFirst).map((i) => i.id)).toEqual(['new', 'old', 'none']);
+  });
 });
 
 describe('parsers and dates', () => {

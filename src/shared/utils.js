@@ -48,6 +48,11 @@ export function toDate(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/** Sort comparator: newest first. Accepts Firestore timestamps, Dates, ISO strings and numbers; undated items go last. */
+export function newestFirst(a, b) {
+  return (toDate(b.createdAt)?.getTime() ?? 0) - (toDate(a.createdAt)?.getTime() ?? 0);
+}
+
 export function formatDate(value, locale = 'en-GB') {
   const date = toDate(value);
   return date ? date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) : '';

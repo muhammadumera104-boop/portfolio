@@ -4,7 +4,8 @@ import { mountShell, setMeta } from './shell.js';
 import { getPostBySlug, listPublishedPosts, countView, listComments, addComment } from '../firebase/api.js';
 import { firebaseReady } from '../firebase/app.js';
 import { commentSchema, fieldErrors } from '../shared/schemas.js';
-import { formatDate, readingTime, relatedPosts, makeExcerpt } from '../shared/utils.js';
+import { builtInPosts } from '../data/posts.js';
+import { formatDate, readingTime, relatedPosts, makeExcerpt, toDate } from '../shared/utils.js';
 import { toast } from '../shared/toast.js';
 import { esc, list } from '../render/util.js';
 
@@ -44,7 +45,7 @@ function shareLinks(url, title) {
   </div>`;
 }
 
-function renderPost(post, related, comments) {
+function renderPost(post, related, comments, live) {
   const url = location.href.split('#')[0];
   const minutes = post.readingTime || readingTime(post.content);
   const description = post.excerpt || makeExcerpt(post.content);
@@ -58,7 +59,7 @@ function renderPost(post, related, comments) {
     headline: post.title,
     description,
     author: { '@type': 'Person', name: post.authorName || 'Muhammad Umer Rizwan' },
-    datePublished: (post.createdAt?.toDate?.() || new Date()).toISOString(),
+    datePublished: (toDate(post.createdAt) || new Date()).toISOString(),
     ...(post.coverImage ? { image: post.coverImage } : {}),
   });
   document.head.append(ld);
@@ -68,7 +69,7 @@ function renderPost(post, related, comments) {
     <p class="label"><a href="blog.html">← All posts</a></p>
     <ul class="chips article__tags">${list(post.tags || [], (t) => `<li class="chip">${esc(t)}</li>`)}</ul>
     <h1 class="article__title">${esc(post.title)}</h1>
-    <p class="label article__meta">${esc(post.authorName || 'Muhammad Umer Rizwan')} · ${esc(formatDate(post.createdAt))} · ${minutes} min read · <span data-views>${post.views || 0}</span> views</p>
+    <p class="label article__meta">${esc(post.authorName || 'Muhammad Umer Rizwan')} · ${esc(formatDate(post.createdAt))} · ${minutes} min read${live ? ` · <span data-views>${post.views || 0}</span> views` : ''}</p>
     ${post.coverImage ? `<img class="article__cover" src="${esc(post.coverImage)}" alt="" decoding="async">` : ''}
     <div class="prose" data-prose></div>
     ${shareLinks(url, post.title)}
@@ -79,7 +80,10 @@ function renderPost(post, related, comments) {
     <ul class="related__list">${list(related, (p) => `<li><a href="post.html?slug=${encodeURIComponent(p.slug)}">${esc(p.title)}</a><span class="label">${esc(formatDate(p.createdAt))}</span></li>`)}</ul>
   </section>` : ''}
 
-  <section class="container comments" aria-labelledby="comments-title">
+  ${!live ? `<section class="container comments" aria-labelledby="comments-title">
+    <h2 id="comments-title" class="related__title">Comments</h2>
+    <p class="comments__empty">Comments open once this post is published from the admin dashboard.</p>
+  </section>` : `<section class="container comments" aria-labelledby="comments-title">
     <h2 id="comments-title" class="related__title">Comments <span class="label" data-count>${comments.length}</span></h2>
     <ul class="comments__list" data-comments>${comments.length ? list(comments, commentHtml) : ''}</ul>
     <p class="comments__empty" data-empty${comments.length ? ' hidden' : ''}>No comments yet. Be the first.</p>
@@ -91,7 +95,7 @@ function renderPost(post, related, comments) {
       <button class="btn btn--ink" type="submit">Post comment</button>
       <p class="contact-form__status" data-status role="status" aria-live="polite"></p>
     </form>
-  </section>`;
+  </section>`}`;
 
   main.querySelector('[data-prose]').innerHTML = clean(post.content);
 
@@ -105,6 +109,7 @@ function renderPost(post, related, comments) {
   });
 
   const form = main.querySelector('[data-comment-form]');
+  if (!form) return; // built-in post: comments need the database
   const status = form.querySelector('[data-status]');
   const button = form.querySelector('button[type="submit"]');
   form.addEventListener('submit', async (event) => {
@@ -141,6 +146,7 @@ function renderPost(post, related, comments) {
     }
   });
 
+  if (!live) return;
   countView(post.id).then((counted) => {
     if (counted) main.querySelector('[data-views]').textContent = String((post.views || 0) + 1);
   });
@@ -148,18 +154,28 @@ function renderPost(post, related, comments) {
 
 (async () => {
   if (!slug) return notice('No post selected', 'Open a post from the blog list.');
-  if (!firebaseReady) return notice('Blog unavailable', 'This site is not connected to a database yet.');
   main.innerHTML = '<div class="container article"><div class="skeleton skeleton--title"></div><div class="skeleton skeleton--text"></div><div class="skeleton skeleton--text"></div></div>';
-  try {
-    const post = await getPostBySlug(slug);
-    if (!post) return notice('Post not found', 'It may have been unpublished or moved.');
+
+  // Live post from Firestore first; otherwise the post bundled with the site (no comments or view counter).
+  let live = null;
+  if (firebaseReady) {
+    try {
+      live = await getPostBySlug(slug);
+    } catch (error) {
+      console.warn('[post] database unavailable, trying built-in posts:', error.message);
+    }
+  }
+
+  if (live) {
     const [all, comments] = await Promise.all([
       listPublishedPosts().catch(() => []),
-      listComments(post.id).catch(() => []),
+      listComments(live.id).catch(() => []),
     ]);
-    renderPost(post, relatedPosts(post, all), comments);
-  } catch (error) {
-    console.error('[post]', error);
-    notice('Could not load this post', 'Please check your connection and try again in a moment.');
+    return renderPost(live, relatedPosts(live, all), comments, true);
   }
+
+  const bundled = builtInPosts.find((p) => p.slug === slug);
+  if (!bundled) return notice('Post not found', 'It may have been unpublished or moved.');
+  const post = { ...bundled, id: `built-in:${bundled.slug}`, views: 0 };
+  renderPost(post, relatedPosts(post, builtInPosts.map((p) => ({ ...p, id: `built-in:${p.slug}` }))), [], false);
 })();

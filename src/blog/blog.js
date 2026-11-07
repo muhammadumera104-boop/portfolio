@@ -2,7 +2,8 @@
 import { mountShell, setMeta } from './shell.js';
 import { listPublishedPosts } from '../firebase/api.js';
 import { firebaseReady } from '../firebase/app.js';
-import { filterPosts, paginate, formatDate, readingTime } from '../shared/utils.js';
+import { builtInPosts } from '../data/posts.js';
+import { filterPosts, paginate, formatDate, readingTime, newestFirst } from '../shared/utils.js';
 import { esc, list } from '../render/util.js';
 
 const PER_PAGE = 6;
@@ -113,17 +114,18 @@ pager.addEventListener('click', (event) => {
   main.querySelector('.blog').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
+// Live posts from Firestore win. If there are none, or the database cannot be reached, the posts
+// bundled with the site (src/data/posts.js) are shown so the blog is never empty.
 (async () => {
-  if (!firebaseReady) {
-    grid.innerHTML = message('Blog unavailable', 'This site is not connected to a database yet.');
-    return;
-  }
   grid.innerHTML = skeleton();
-  try {
-    state.posts = await listPublishedPosts();
-    render();
-  } catch (error) {
-    console.error('[blog]', error);
-    grid.innerHTML = message('Could not load posts', 'Please check your connection and try again in a moment.');
+  let live = [];
+  if (firebaseReady) {
+    try {
+      live = await listPublishedPosts();
+    } catch (error) {
+      console.warn('[blog] using built-in posts:', error.message);
+    }
   }
+  state.posts = live.length ? live : [...builtInPosts].sort(newestFirst);
+  render();
 })();

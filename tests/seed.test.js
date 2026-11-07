@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { buildSeed } from '../src/data/seed.js';
 import { webProjects } from '../src/data/content.js';
+import { builtInPosts } from '../src/data/posts.js';
 import { projectSchema, skillSchema, experienceSchema, postSchema } from '../src/shared/schemas.js';
 
 const seed = buildSeed();
@@ -45,7 +46,14 @@ describe('seed data', () => {
     expect(new Set(webProjects.map((p) => p.slug)).size).toBe(webProjects.length);
     expect(new Set(webProjects.map((p) => p.displayOrder)).size).toBe(webProjects.length);
   });
-  it('ships the sample post as an unpublished draft', () => {
-    expect(seed.blog_posts.every((p) => p.data.published === false)).toBe(true);
+  it('seeds every built-in blog post, published, with unique slugs and tags', () => {
+    expect(seed.blog_posts).toHaveLength(builtInPosts.length);
+    expect(builtInPosts.length).toBeGreaterThanOrEqual(5);
+    expect(seed.blog_posts.every((p) => p.data.published === true)).toBe(true);
+    expect(new Set(builtInPosts.map((p) => p.slug)).size).toBe(builtInPosts.length);
+    expect(builtInPosts.every((p) => p.tags.length > 0 && p.excerpt.length <= 300)).toBe(true);
+  });
+  it('built-in post bodies contain no script, event handlers or iframes', () => {
+    builtInPosts.forEach((p) => expect(p.content, p.slug).not.toMatch(/<script|<iframe|\son\w+=|javascript:/i));
   });
 });

@@ -5,6 +5,7 @@ import {
   addDoc, updateDoc, increment, serverTimestamp,
 } from 'firebase/firestore';
 import { app, firebaseReady } from './app.js';
+import { newestFirst } from '../shared/utils.js';
 
 const db = () => {
   if (!firebaseReady) throw new Error('Firebase is not configured. Check the VITE_FIREBASE_* values in .env.');
@@ -21,7 +22,6 @@ const withTimeout = (promise, ms = 10000) =>
 
 const rows = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 const byOrder = (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0);
-const newest = (a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0);
 
 export const listProjects = async () => rows(await withTimeout(getDocs(collection(db(), 'projects')))).sort(byOrder);
 export const listSkills = async () => rows(await withTimeout(getDocs(collection(db(), 'skills')))).sort(byOrder);
@@ -29,7 +29,7 @@ export const listExperiences = async () => rows(await withTimeout(getDocs(collec
 
 // Equality filters only, so no composite index is needed; sorting happens in the browser.
 export const listPublishedPosts = async () =>
-  rows(await withTimeout(getDocs(query(collection(db(), 'blog_posts'), where('published', '==', true))))).sort(newest);
+  rows(await withTimeout(getDocs(query(collection(db(), 'blog_posts'), where('published', '==', true))))).sort(newestFirst);
 
 export async function getPostBySlug(slug) {
   const snap = await withTimeout(getDocs(query(collection(db(), 'blog_posts'), where('slug', '==', slug), where('published', '==', true), limit(1))));
