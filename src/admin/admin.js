@@ -145,7 +145,7 @@ async function viewOverview(main) {
     <div class="stats">${list(stats, ([label, n, note]) => `<div class="stat"><p class="label">${label}</p><p class="stat__n">${n}</p><p class="stat__note">${esc(note)}</p></div>`)}</div>
     <section class="panel">
       <h2>Fill the database from your portfolio</h2>
-      <p>Writes your projects, skill groups, education and one sample draft post (from <code>src/data/content.js</code>) into Firestore. Existing documents with the same ids are overwritten, so run it once on a fresh database.</p>
+      <p>Writes your projects, skill groups, education and the built-in blog posts (from <code>src/data/content.js</code> and <code>src/data/posts.js</code>) into Firestore. Existing documents with the same ids are overwritten, so run it once on a fresh database.</p>
       <button type="button" class="btn btn--ink" data-seed>Seed database</button>
     </section>`;
 }
