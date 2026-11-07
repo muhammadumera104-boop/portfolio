@@ -1,0 +1,62 @@
+/* Initial states for JS-driven motion. `.js` is set in index.html; `.motion-ready`
+   is added by src/scripts/motion.js. If scripts never run, a delayed fallback
+   animation makes everything visible anyway. */
+
+.js:not(.motion-ready) :is([data-hero-line], [data-hero-fade], [data-slab], [data-stack-item]) {
+  visibility: hidden;
+  animation: motion-failsafe 0s linear 2.5s forwards;
+}
+
+@keyframes motion-failsafe {
+  to {
+    visibility: visible;
+  }
+}
+
+/* Intro panel: columns lift away to reveal the hero (built by motion.js) */
+.intro {
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--s-4);
+  color: var(--ink);
+  pointer-events: none;
+}
+
+.intro__cols {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.intro__cols span {
+  background: var(--vermilion);
+  border-left: 1px solid rgb(17 17 17 / 0.12);
+}
+
+.intro__mark,
+.intro__meta {
+  position: relative;
+  overflow: hidden;
+}
+
+.intro__mark span,
+.intro__meta span {
+  display: block;
+}
+
+.intro__mark {
+  font-size: clamp(3.5rem, 12vw, 9rem);
+  font-weight: 700;
+  letter-spacing: -0.07em;
+  line-height: 1;
+}
+
+.intro__mark b {
+  color: var(--paper);
+  font-weight: inherit;
+}

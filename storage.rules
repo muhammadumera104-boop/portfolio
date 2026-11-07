@@ -1,0 +1,15 @@
+rules_version = '2';
+
+// Blog images: anyone can view, only the verified site owner can upload (images up to 5 MB).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /blog/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.email == 'muhammadumera104@gmail.com'
+        && request.auth.token.email_verified == true
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

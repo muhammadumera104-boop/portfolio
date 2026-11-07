@@ -1,0 +1,118 @@
+/* ─────────────────────────────────────────────────────────────
+   Design tokens. Change colours, type, spacing and motion here.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* Palette */
+  --paper: #f4f1ea;
+  --paper-2: #ebe6dc;
+  --ink: #111111;
+  --charcoal: #242424;
+  --stone: #6b665f;        /* muted text on paper, 5.0:1 */
+  --stone-dark: #a39e95;   /* muted text on ink, 6.9:1 */
+  --rule-light: #d8d3ca;
+  --rule-dark: #2f2d2a;
+  --vermilion: #f0442e;    /* accent: fills, large text, indicators */
+  --vermilion-ink: #c2341f;/* accent for small text on paper, 4.9:1 */
+
+  /* Semantic colours (light theme) */
+  --bg: var(--paper);
+  --bg-raised: var(--paper-2);
+  --fg: var(--ink);
+  --fg-muted: var(--stone);
+  --rule: var(--rule-light);
+  --accent: var(--vermilion);
+  --accent-text: var(--vermilion-ink);
+  --on-accent: var(--ink);
+
+  /* Inverted chapters (projects, footer) */
+  --inv-bg: var(--ink);
+  --inv-bg-raised: #1b1a18;
+  --inv-fg: var(--paper);
+  --inv-fg-muted: var(--stone-dark);
+  --inv-rule: var(--rule-dark);
+
+  /* Illustration faces */
+  --slab-top: #fbf9f4;
+  --slab-left: #e3ddd1;
+  --slab-right: #cfc8ba;
+
+  /* Typography */
+  --font-sans: 'DM Sans Variable', 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Instrument Serif', 'Times New Roman', serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
+
+  --fs-hero: clamp(3.4rem, 12.6vw, 12.5rem);
+  --fs-display: clamp(2.6rem, 7.4vw, 7rem);
+  --fs-title: clamp(2rem, 4.6vw, 4.25rem);
+  --fs-h3: clamp(1.25rem, 1.6vw, 1.5rem);
+  --fs-lead: clamp(1.3rem, 2.3vw, 2.1rem);
+  --fs-body: clamp(1rem, 0.96rem + 0.18vw, 1.0625rem);
+  --fs-small: 0.875rem;
+  --fs-label: 0.75rem;
+
+  --lh-tight: 0.9;
+  --lh-snug: 1.15;
+  --lh-body: 1.6;
+
+  --tracking-display: -0.055em;
+  --tracking-title: -0.035em;
+  --tracking-label: 0.08em;
+
+  /* Spacing (4px base) */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4.5rem;
+  --s-9: 7rem;
+  --section-y: clamp(5rem, 11vw, 10rem);
+
+  /* Layout */
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --max-width: 1440px;
+  --measure: 62ch;
+  --header-h: 4.25rem;
+
+  /* Shape */
+  --radius-s: 4px;
+  --radius-m: 10px;
+  --radius-pill: 999px;
+  --shadow: 0 1px 0 rgb(0 0 0 / 0.04), 0 18px 40px -24px rgb(0 0 0 / 0.35);
+
+  /* Motion (mirrored in src/scripts/motion.js) */
+  --dur-fast: 180ms;
+  --dur-base: 420ms;
+  --dur-slow: 800ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  color-scheme: light;
+}
+
+/* Dark theme: the page becomes ink, and inverted chapters flip to paper-toned dark. */
+:root[data-theme='dark'] {
+  --bg: #121211;
+  --bg-raised: #1b1a18;
+  --fg: #efebe3;
+  --fg-muted: var(--stone-dark);
+  --rule: var(--rule-dark);
+  --accent-text: #ff6a52;
+  --on-accent: var(--ink);
+
+  --inv-bg: #080807;
+  --inv-bg-raised: #161514;
+  --inv-fg: #efebe3;
+  --inv-fg-muted: var(--stone-dark);
+  --inv-rule: #262422;
+
+  --slab-top: #2a2825;
+  --slab-left: #1f1d1b;
+  --slab-right: #171615;
+
+  --shadow: 0 18px 40px -24px rgb(0 0 0 / 0.8);
+  color-scheme: dark;
+}

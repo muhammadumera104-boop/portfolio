@@ -1,0 +1,327 @@
+/* Reduced motion: remove nonessential movement, keep content fully visible. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .ticker__track {
+    flex-wrap: wrap;
+    width: auto;
+    animation: none;
+  }
+
+  .ticker__set {
+    flex-wrap: wrap;
+    padding-inline: var(--gutter);
+  }
+
+  .ticker__set[aria-hidden='true'] {
+    display: none;
+  }
+
+  .slab-depth {
+    transform: none !important;
+  }
+}
+
+/* Print: a clean one-column CV generated from the page ("Save CV as PDF"). */
+@media print {
+  @page {
+    margin: 14mm 16mm;
+  }
+
+  :root,
+  :root[data-theme='dark'],
+  .inverse,
+  .contact,
+  .contact-form {
+    --bg: #fff;
+    --bg-raised: #fff;
+    --fg: #111;
+    --fg-muted: #555;
+    --rule: #ccc;
+    --accent: #c2341f;
+    --accent-text: #c2341f;
+  }
+
+  body {
+    background: #fff;
+    color: #111;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  /* Undo any animation state that hasn't played yet */
+  [data-reveal],
+  [data-hero-line],
+  [data-hero-fade],
+  .line__inner {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
+
+  .skip-link,
+  .progress,
+  .site-header,
+  .mobile-menu,
+  .hero__columns,
+  .hero__stack,
+  .hero__cta,
+  .hero__exploring,
+  .hero__scroll,
+  .ticker,
+  .about__console,
+  .skills__legend,
+  .project-index,
+  .project-preview,
+  .project__figure,
+  .project__num,
+  .projects__intro,
+  .approach,
+  .recognition__cv,
+  .contact-form,
+  .contact__audiences,
+  .contact__title,
+  .site-footer {
+    display: none !important;
+  }
+
+  .section,
+  .project,
+  .contact {
+    padding-block: 6mm;
+    background: #fff;
+    color: #111;
+    border: 0;
+  }
+
+  .hero {
+    padding: 0 0 4mm;
+  }
+
+  .hero__inner {
+    display: block;
+    min-height: 0;
+  }
+
+  .hero__meta {
+    display: flex;
+    gap: 6mm;
+    border: 0;
+    padding: 0 0 2mm;
+  }
+
+  .hero__meta .label {
+    padding: 0;
+  }
+
+  .hero__title {
+    padding: 0;
+    font-size: 26pt;
+  }
+
+  .hero__name {
+    font-size: 16pt;
+    font-weight: 700;
+  }
+
+  .hero__name::before {
+    display: none;
+  }
+
+  .hero__title .hero__line {
+    display: none;
+  }
+
+  .hero__foot {
+    display: block;
+    border: 0;
+    padding: 0;
+  }
+
+  .hero__intro {
+    max-width: none;
+    font-size: 11pt;
+  }
+
+  .section-head {
+    margin-bottom: 3mm;
+    gap: 1mm;
+  }
+
+  .section-head__label {
+    display: none;
+  }
+
+  .section-head__title,
+  .contact__lead > .label {
+    max-width: none;
+    font-size: 14pt;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  .section-head__title .line {
+    display: inline;
+    overflow: visible;
+  }
+
+  .section-head__title .line__inner {
+    display: inline;
+  }
+
+  .section-head__title .line + .line::before {
+    content: ' ';
+  }
+
+  .about__grid,
+  .about__copy {
+    display: block;
+  }
+
+  .about__lead {
+    max-width: none;
+    font-size: 12pt;
+    margin-bottom: 2mm;
+  }
+
+  .about__text {
+    display: block;
+  }
+
+  .about__text p {
+    max-width: none;
+    margin-bottom: 2mm;
+  }
+
+  .facts__row,
+  .skill-row,
+  .timeline__row {
+    padding-block: 2mm;
+    break-inside: avoid;
+  }
+
+  .skill-row__note {
+    display: none;
+  }
+
+  .chip,
+  .chip--practiced,
+  .chip--learning {
+    padding: 0.5mm 2mm;
+    background: none;
+    color: #111;
+    border: 1px solid #999;
+    font-size: 9pt;
+  }
+
+  .project {
+    padding-block: 3mm;
+    break-inside: avoid;
+  }
+
+  .project__grid {
+    display: block;
+  }
+
+  .project__title {
+    max-width: none;
+    font-size: 13pt;
+  }
+
+  .project__summary {
+    margin-top: 1mm;
+    max-width: none;
+    font-size: 10.5pt;
+  }
+
+  .project__body {
+    display: block;
+    border: 0;
+    padding: 1mm 0 0;
+  }
+
+  .project__block {
+    margin-bottom: 1.5mm;
+  }
+
+  .project__block:first-child,
+  .project__links {
+    display: none;
+  }
+
+  .project__block .chips {
+    margin-top: 1mm;
+  }
+
+  .recognition {
+    margin-top: 4mm;
+    gap: 4mm;
+  }
+
+  .recognition__title {
+    font-size: 12pt;
+  }
+
+  /* Contact details sit directly under the name on the CV */
+  main {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero {
+    order: -2;
+  }
+
+  .contact {
+    order: -1;
+    padding-block: 0 4mm;
+  }
+
+  .contact__lead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 1mm 6mm;
+  }
+
+  .contact__lead > .label,
+  .contact__intro {
+    display: none !important;
+  }
+
+  .contact__email {
+    font-size: 10.5pt;
+    background: none;
+    padding: 0;
+  }
+
+  .contact__social {
+    gap: 1mm 6mm;
+  }
+
+  .contact .link-arrow {
+    background: none;
+    padding: 0;
+    font-weight: 500;
+  }
+
+  .contact__social a::after {
+    content: ' — ' attr(href);
+    font-weight: 400;
+  }
+
+  .contact .sr-only,
+  .contact .icon {
+    display: none !important;
+  }
+}

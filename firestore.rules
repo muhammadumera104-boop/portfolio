@@ -1,0 +1,71 @@
+rules_version = '2';
+
+// Public can read portfolio content and published posts, send contact messages and comment.
+// Only the site owner (verified Google / email account below) can write content or read messages.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'muhammadumera104@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function textBetween(value, min, max) {
+      return value is string && value.size() >= min && value.size() <= max;
+    }
+
+    match /projects/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /skills/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /experiences/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /blog_posts/{postId} {
+      // Drafts are visible to the owner only.
+      allow read: if resource.data.published == true || isAdmin();
+      allow create, delete: if isAdmin();
+      // Visitors may only bump the view counter by exactly one.
+      allow update: if isAdmin()
+        || (resource.data.published == true
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
+            && request.resource.data.views == resource.data.views + 1);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if get(/databases/$(database)/documents/blog_posts/$(postId)).data.published == true
+          && request.resource.data.keys().hasOnly(['name', 'content', 'createdAt'])
+          && textBetween(request.resource.data.name, 2, 80)
+          && textBetween(request.resource.data.content, 2, 1000)
+          && request.resource.data.createdAt == request.time;
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Lets the admin dashboard list every comment at once.
+    match /{path=**}/comments/{commentId} {
+      allow read: if isAdmin();
+    }
+
+    match /contact_messages/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'subject', 'message', 'read', 'createdAt'])
+        && textBetween(request.resource.data.name, 2, 80)
+        && textBetween(request.resource.data.email, 5, 120)
+        && request.resource.data.email.matches('^[^@\s]+@[^@\s]+\.[^@\s]+$')
+        && textBetween(request.resource.data.subject, 0, 120)
+        && textBetween(request.resource.data.message, 10, 4000)
+        && request.resource.data.read == false
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

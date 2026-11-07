@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QUIZORA — Challenge Your Mind</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f4f6ff;--fg:#141b3a;--card:#fff;--pri:#5b3df5;--onpri:#fff;--blue:#2563eb;--mut:#55608a;--line:#dfe3f5;--ok:#15803d;--bad:#b91c1c;--ease:cubic-bezier(.2,.8,.2,1);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1030;--fg:#eef1ff;--card:#151c4a;--pri:#8b6cff;--onpri:#0b1030;--blue:#60a5fa;--mut:#a9b2e0;--line:#2a3380;--ok:#4ade80;--bad:#f87171}}
+:root[data-theme="dark"]{--bg:#0b1030;--fg:#eef1ff;--card:#151c4a;--pri:#8b6cff;--onpri:#0b1030;--blue:#60a5fa;--mut:#a9b2e0;--line:#2a3380;--ok:#4ade80;--bad:#f87171}
+*{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--fg);font:16px/1.55 Inter,system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+h1,h2,.logo{font-family:Sora,system-ui,sans-serif;line-height:1.15}h1{font-size:clamp(2.2rem,6vw,3.6rem)}h2{font-size:1.4rem;margin-bottom:.6rem}button{font:inherit;color:inherit;cursor:pointer}:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.35;z-index:-1;animation:fl 12s ease-in-out infinite}@keyframes fl{50%{transform:translate(30px,-40px)}}
+.top{display:flex;justify-content:space-between;align-items:center;padding:14px 5vw;max-width:1100px;margin:auto}.logo{font-weight:800;font-size:1.3rem;background:linear-gradient(90deg,var(--pri),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+.ib{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);margin-left:6px}
+main{max-width:1100px;margin:auto;padding:10px 5vw 60px;display:grid;gap:1.2rem}
+.card{background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:22px;padding:1.3rem;box-shadow:0 8px 30px #0001;animation:in .5s var(--ease)}@keyframes in{from{opacity:0;transform:translateY(14px)}}
+.hero{display:grid;grid-template-columns:1.1fr 1fr;gap:1.5rem;align-items:center}@media(max-width:820px){.hero{grid-template-columns:1fr}}.hero p{color:var(--mut);margin:.8rem 0 1.2rem}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem}.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}.between{justify-content:space-between;margin-top:1.2rem}
+.btn{background:linear-gradient(135deg,var(--pri),var(--blue));color:var(--onpri);border:0;border-radius:99px;padding:.8rem 1.5rem;font-weight:600;transition:transform .2s var(--ease),box-shadow .2s}.btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px #5b3df555}.btn:active{transform:scale(.96)}
+.btn.g{background:transparent;border:1px solid var(--pri);color:var(--fg)}.btn:disabled{opacity:.45;pointer-events:none}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:.4rem .9rem;font-size:.88rem;min-height:38px;transition:all .2s}.chip[aria-pressed=true],.chip:hover{background:var(--pri);color:var(--onpri);border-color:var(--pri)}
+.lbl{font-size:.78rem;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin:.8rem 0 .3rem}.sum{margin-top:1rem;font-size:.9rem;padding:.6rem .8rem;border-radius:12px;background:var(--bg);border:1px dashed var(--line)}.demo{font-size:.78rem;color:var(--mut)}
+.qh{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;margin-bottom:.8rem}.qh>b{margin-right:auto}.tm{font:700 1.1rem Sora,sans-serif;font-variant-numeric:tabular-nums}.tm.warn{color:var(--bad);animation:pu 1s infinite}@keyframes pu{50%{opacity:.5}}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:1rem}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),var(--blue));transition:width .5s var(--ease)}
+.opts{display:grid;gap:.7rem;margin-top:1rem}.opt{display:flex;gap:.8rem;align-items:center;text-align:left;width:100%;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:.9rem 1rem;min-height:56px;transition:transform .2s var(--ease),border-color .2s}.opt:hover{transform:translateX(4px);border-color:var(--pri)}
+.opt b{width:32px;height:32px;border-radius:10px;background:var(--line);display:grid;place-items:center;flex:none}.opt span{flex:1}.opt em{font-style:normal;font-weight:700;font-size:.85rem}
+.opt.sel{border-color:var(--pri);background:color-mix(in srgb,var(--pri) 14%,var(--card))}.opt.ok{border-color:var(--ok);animation:pop .4s}.opt.bad{border-color:var(--bad);border-style:dashed;animation:sk .4s}.opt.ok em{color:var(--ok)}.opt.bad em{color:var(--bad)}
+@keyframes pop{50%{transform:scale(1.03)}}@keyframes sk{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fb{margin-top:1rem;padding:.8rem 1rem;border-radius:14px;border-left:5px solid}.okf{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}.badf{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.nvg{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}.nv{min-width:52px;min-height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:.85rem}.nv.an{background:var(--line)}.nv.cur{border:3px solid var(--pri)}
+.pz{filter:blur(14px);pointer-events:none}
+.ring{position:relative;width:150px;height:150px;margin:auto}.ring svg{transform:rotate(-90deg)}.ring circle{fill:none;stroke-width:12;stroke-linecap:round}.ring .t{stroke:var(--line)}.ring .p{stroke:var(--pri);stroke-dasharray:326.7;stroke-dashoffset:326.7;transition:stroke-dashoffset 1.4s var(--ease)}.ring b{position:absolute;inset:0;display:grid;place-items:center;font:800 1.9rem Sora,sans-serif}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:.6rem;margin:1rem 0;text-align:center}.stats div{background:var(--bg);border-radius:14px;padding:.7rem}.stats b{display:block;font:800 1.4rem Sora,sans-serif}
+.cb{display:grid;grid-template-columns:140px 1fr 40px;gap:.5rem;align-items:center;font-size:.85rem;margin:.3rem 0}.cb i{display:block;height:8px;border-radius:9px;background:var(--pri)}
+.ri{border:1px solid var(--line);border-radius:16px;padding:1rem;margin-bottom:.8rem;background:var(--card)}.ri h3{margin:.3rem 0;font-size:1.05rem}.st{font-weight:700}.st.c{color:var(--ok)}.st.w{color:var(--bad)}.st.u{color:var(--mut)}
+.bg2{display:flex;gap:.5rem;flex-wrap:wrap}.bdg{border:1px solid var(--line);border-radius:12px;padding:.4rem .7rem;font-size:.8rem}.bdg.on{border-color:var(--pri);background:color-mix(in srgb,var(--pri) 14%,transparent)}
+li{margin-left:1.1rem;font-size:.9rem}dialog{border:0;border-radius:22px;background:var(--card);color:var(--fg);padding:1.5rem;max-width:min(460px,92vw);margin:auto}dialog::backdrop{background:#000a}dialog[open]{animation:in .3s var(--ease)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,120px);background:var(--fg);color:var(--bg);padding:.7rem 1.2rem;border-radius:99px;z-index:100;transition:transform .4s var(--ease);font-size:.9rem}#toast.on{transform:translate(-50%,0)}
+#cf{position:fixed;inset:0;pointer-events:none;z-index:90}.sr{position:absolute;left:-9999px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style></head><body>
+<div class="blob" style="width:320px;height:320px;background:#5b3df5;top:-80px;right:-60px"></div><div class="blob" style="width:260px;height:260px;background:#2563eb;bottom:-60px;left:-60px;animation-delay:-5s"></div>
+<header class="top"><span class="logo">◆ QUIZORA</span><span><button class="ib" data-a="snd" id="snd" aria-label="Toggle sound" aria-pressed="false">🔇</button><button class="ib" data-a="thm" aria-label="Toggle light or dark theme">🌓</button></span></header>
+<main id="app"></main><dialog id="dg"></dialog><div id="toast"></div><div id="live" class="sr" aria-live="polite"></div><canvas id="cf"></canvas>
+<script>
+const $=s=>document.querySelector(s),CATS=['General Knowledge','Science','Technology','Programming','Mathematics','History'],DL={e:'Easy',m:'Medium',h:'Hard'},PTS={e:10,m:20,h:30},RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+// question bank: [category, difficulty, question, [correct, ...distractors], explanation]
+const Q=[
+['General Knowledge','e','What is the capital of Australia?',['Canberra','Sydney','Melbourne','Perth'],'Canberra was purpose-built as the capital; Sydney and Melbourne are larger cities.'],
+['General Knowledge','e','Which is the largest ocean?',['Pacific','Atlantic','Indian','Arctic'],'The Pacific covers about a third of Earth’s surface.'],
+['General Knowledge','m','Which is the smallest country by area?',['Vatican City','Monaco','San Marino','Liechtenstein'],'Vatican City covers roughly 0.44 km².'],
+['General Knowledge','m','Which is the world’s largest hot desert?',['Sahara','Gobi','Kalahari','Arabian'],'The Sahara is the largest hot desert; the Gobi is a cold desert.'],
+['General Knowledge','h','Which country spans the most time zones when overseas territories are counted?',['France','Russia','United States','China'],'France’s overseas territories give it the most time zones.'],
+['General Knowledge','h','In which country is Mount Kilimanjaro?',['Tanzania','Kenya','Uganda','Ethiopia'],'Africa’s highest peak lies in northern Tanzania.'],
+['Science','e','What is the chemical symbol for gold?',['Au','Ag','Gd','Go'],'Au comes from the Latin “aurum”.'],
+['Science','e','Which planet is closest to the Sun?',['Mercury','Venus','Mars','Earth'],'Mercury orbits closest to the Sun.'],
+['Science','m','Which gas do plants absorb for photosynthesis?',['Carbon dioxide','Oxygen','Nitrogen','Hydrogen'],'Plants take in CO₂ and release oxygen.'],
+['Science','m','Which gas is most abundant in Earth’s atmosphere?',['Nitrogen','Oxygen','Argon','Carbon dioxide'],'Nitrogen makes up about 78% of the air.'],
+['Science','h','Which element has the highest electronegativity?',['Fluorine','Oxygen','Chlorine','Nitrogen'],'Fluorine is the most electronegative element.'],
+['Science','h','Which blood type is the universal red-cell donor?',['O negative','AB positive','A negative','B positive'],'O-negative red cells lack A, B and Rh antigens.'],
+['Technology','e','What does CPU stand for?',['Central Processing Unit','Central Program Utility','Computer Personal Unit','Core Processing Utility'],'The CPU executes a computer’s instructions.'],
+['Technology','e','What does HTTP stand for?',['HyperText Transfer Protocol','High Transfer Text Protocol','Hyperlink Text Transmission Process','Host Transfer Technology Protocol'],'HTTP is the protocol the web uses to transfer pages.'],
+['Technology','m','Which of these is a relational database?',['PostgreSQL','Redis','MongoDB','Neo4j'],'PostgreSQL uses tables; Redis is key-value, MongoDB document and Neo4j graph.'],
+['Technology','m','What does DNS do?',['Translates domain names to IP addresses','Encrypts web traffic','Assigns Wi-Fi passwords','Compresses images'],'DNS maps human-friendly names to IP addresses.'],
+['Technology','h','Which port does HTTPS use by default?',['443','80','21','8080'],'HTTPS uses 443; plain HTTP uses 80.'],
+['Technology','h','At which OSI layer does IP routing occur?',['Network layer','Transport layer','Data link layer','Session layer'],'IP operates at layer 3, the network layer.'],
+['Programming','e','Which JavaScript keyword declares a block-scoped variable?',['let','var','def','dim'],'let is block-scoped; var is function-scoped.'],
+['Programming','e','What does Python print for print(2**3)?',['8','6','9','23'],'** is exponentiation: 2 to the power 3 is 8.'],
+['Programming','m','What does typeof null return in JavaScript?',['"object"','"null"','"undefined"','"number"'],'A long-standing quirk of the language.'],
+['Programming','m','Which Python type is immutable?',['tuple','list','dict','set'],'Tuples cannot be changed after creation.'],
+['Programming','h','What is the time complexity of binary search?',['O(log n)','O(n)','O(n log n)','O(1)'],'Each step halves the search space (sorted input).'],
+['Programming','h','What does 0.1 + 0.2 === 0.3 evaluate to in JavaScript?',['false','true','undefined','It throws an error'],'Floating-point rounding gives 0.30000000000000004.'],
+['Mathematics','e','What is 12 × 12?',['144','124','136','148'],'12 × 12 = 144.'],
+['Mathematics','e','What is the square root of 81?',['9','8','7','11'],'9 × 9 = 81.'],
+['Mathematics','m','What is the derivative of x²?',['2x','x','x²','2'],'The power rule gives 2x.'],
+['Mathematics','m','What is 15% of 200?',['30','20','25','35'],'0.15 × 200 = 30.'],
+['Mathematics','h','What are the roots of x² − 5x + 6 = 0?',['2 and 3','−2 and −3','1 and 6','−1 and −6'],'It factors as (x − 2)(x − 3).'],
+['Mathematics','h','What is log base 2 of 1024?',['10','8','12','9'],'2 to the power 10 is 1024.'],
+['History','e','Who was the first President of the United States?',['George Washington','Thomas Jefferson','John Adams','Abraham Lincoln'],'Washington served from 1789 to 1797.'],
+['History','e','In which year did World War II end?',['1945','1939','1918','1950'],'The war ended in 1945.'],
+['History','m','Which empire built the Colosseum?',['Roman Empire','Ottoman Empire','Byzantine Empire','Persian Empire'],'The Colosseum was completed in Rome around 80 CE.'],
+['History','m','Who commissioned the Taj Mahal?',['Shah Jahan','Akbar','Aurangzeb','Babur'],'Shah Jahan built it as a tomb for Mumtaz Mahal.'],
+['History','h','In which year did the Berlin Wall fall?',['1989','1991','1985','1979'],'The wall opened on 9 November 1989.'],
+['History','h','Which treaty formally ended WWI with Germany?',['Treaty of Versailles','Treaty of Westphalia','Treaty of Tordesillas','Treaty of Paris'],'Signed in 1919.']];
+// storage
+const ld=(k,d)=>{try{return{...d,...JSON.parse(localStorage.getItem(k))}}catch(e){return d}},sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let C=ld('qz-c',{cat:'Mixed',diff:'e',n:5,timer:false,mode:'practice',bonus:true,sound:false,theme:''}),P=ld('qz-p',{hist:[],best:0,ach:[],plays:0,days:[],daily:null});
+const S={},app=h=>$('#app').innerHTML=h,toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2400)},say=m=>$('#live').textContent=m;
+const today=()=>new Date().toLocaleDateString('en-CA'),sh=(a,r=Math.random)=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const hash=s=>[...s].reduce((h,c)=>Math.imul(h^c.charCodeAt(0),16777619)>>>0,2166136261),rng=a=>()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+// sound
+let ac;const beep=(f,d=.12,t=0)=>{if(!C.sound)return;try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=.06;o.connect(g);g.connect(ac.destination);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+d)}catch(e){}};
+const snd={sel:()=>beep(520,.06),ok:()=>{beep(660);beep(880,.15,.12)},bad:()=>beep(180,.25),done:()=>[523,659,784].forEach((f,i)=>beep(f,.18,i*.15)),ach:()=>{beep(784);beep(988,.2,.12)}};
+// scoring engine (pure): base 10/20/30 by difficulty; streak bonus = +5 per prior consecutive correct answer (max +25) when enabled
+function score(qs,ans,bonusOn){let raw=0,bonus=0,run=0,best=0,c=0,w=0,u=0;qs.forEach((q,i)=>{const a=ans[i];if(a==null){u++;run=0}else if(q.o[a].ok){c++;raw+=PTS[q.d];if(bonusOn)bonus+=Math.min(run,5)*5;run++;best=Math.max(best,run)}else{w++;run=0}});return{raw,bonus,total:raw+bonus,c,w,u,run,best,pct:qs.length?Math.round(c/qs.length*100):0}}
+const msg=p=>p>=90?'Outstanding! You’re a quiz master!':p>=70?'Great work! You’re getting stronger.':p>=50?'Good effort! Keep practicing.':'Every attempt is progress. Try again!';
+const dstreak=()=>{let n=0,d=new Date();if(!P.days.includes(today()))d.setDate(d.getDate()-1);while(P.days.includes(d.toLocaleDateString('en-CA'))){n++;d.setDate(d.getDate()-1)}return n};
+const AC=[['first','First Steps','Finish a quiz',x=>1],['perfect','Perfectionist','Score 100%',x=>x.pct==100],['streak','On Fire','3 correct in a row',x=>x.best>=3],['five','Regular','Complete 5 quizzes',x=>P.plays>=5],['hard','Hard Mode Hero','70%+ on Hard',x=>x.hard&&x.pct>=70],['daily','Daily Devotee','Finish a daily challenge',x=>x.daily]];
+// timer
+let tid=0;const clr=()=>{clearInterval(tid);tid=0};
+const el=()=>Math.max(0,((S.endT||Date.now())-S.t0-S.pm-(S.paused?Date.now()-S.ps:0))/1000),fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function tick(){const t=$('#tm');if(!t||S.done)return;if(S.tot){const r=Math.max(0,S.tot-el());t.textContent='⏱ '+fmt(Math.ceil(r));t.classList.toggle('warn',r<=Math.max(10,S.tot*.15));if(r<=0){toast('Time’s up! Submitting…');finish()}}else t.textContent='⏱ '+fmt(el())}
+// screens
+const grp=(k,o)=>o.map(([v,l])=>`<button class="chip" data-k="${k}" data-v='${JSON.stringify(v)}' aria-pressed="${C[k]===v}">${l}</button>`).join('');
+const avail=()=>(C.cat=='Mixed'?Q:Q.filter(q=>q[0]==C.cat)).length;
+const setup=()=>`<div class="lbl">Category</div><div class="row">${grp('cat',[['Mixed','Mixed'],...CATS.map(c=>[c,c])])}</div><div class="lbl">Difficulty</div><div class="row">${grp('diff',[['e','Easy'],['m','Medium'],['h','Hard']])}</div><div class="lbl">Questions</div><div class="row">${grp('n',[[5,'5'],[10,'10'],[15,'15']])}</div><div class="lbl">Timer</div><div class="row">${grp('timer',[[false,'Off'],[true,'On']])}</div><div class="lbl">Mode</div><div class="row">${grp('mode',[['practice','Practice'],['exam','Exam']])}</div><div class="lbl">Streak bonus</div><div class="row">${grp('bonus',[[true,'On'],[false,'Off']])}</div><p class="sum">You’ll play: <b>${C.cat}</b> · ${DL[C.diff]} · ${Math.min(C.n,avail())} questions${C.n>avail()?' (only '+avail()+' available here; pick Mixed for more)':''} · Timer ${C.timer?'on ('+Math.min(C.n,avail())*30+'s total)':'off'} · ${C.mode=='practice'?'Practice (instant feedback)':'Exam (answers revealed at the end)'}</p>`;
+function home(){clr();S.screen='home';const dd=P.daily&&P.daily.date==today();
+const bd=[['Demo Alex',420],['Demo Sam',380],['Demo Riya',310],['Demo Omar',250],['You',P.best]].sort((a,b)=>b[1]-a[1]);
+app(`<section class="hero"><div><h1>Ready to Challenge Your Brain?</h1><p>Test your knowledge, beat the clock, and discover your score.</p><div class="row"><button class="btn" data-a="go">Start Quiz ▶</button><button class="btn g" data-a="how">How to Play</button></div><p class="demo" style="margin-top:1rem">Bank: ${Q.length} questions · ${CATS.length} categories · 3 difficulties</p></div><div class="card"><h2>Quiz setup</h2><div id="su">${setup()}</div></div></section>
+<div class="g3"><div class="card"><h2>📅 Daily challenge</h2><p class="demo">5 medium questions, the same for everyone today.</p>${dd?`<p style="margin:.8rem 0"><b>Completed ✓</b> — ${P.daily.score}/5. Come back tomorrow.</p>`:'<br><button class="btn" data-a="daily">Play today’s challenge</button>'}</div>
+<div class="card"><h2>🏅 Your progress</h2><p>Personal best: <b>${P.best} pts</b> · Quizzes: <b>${P.plays}</b> · Day streak: <b>🔥 ${dstreak()}</b></p><div class="bg2" style="margin-top:.7rem">${AC.map(a=>`<span class="bdg ${P.ach.includes(a[0])?'on':''}" title="${a[2]}">${P.ach.includes(a[0])?'🔓':'🔒'} ${a[1]}</span>`).join('')}</div></div>
+<div class="card"><h2>🏆 Leaderboard</h2><p class="demo">Demo data — not real players.</p><ol>${bd.map(b=>`<li>${b[0]} — ${b[1]} pts</li>`).join('')}</ol></div>
+<div class="card"><h2>🕘 Recent scores</h2>${P.hist.length?`<ul>${P.hist.slice(0,5).map(h=>`<li>${h.d}: ${h.c}/${h.n} (${h.pct}%) — ${h.cat}, ${h.total} pts</li>`).join('')}</ul>`:'<p class="demo">No quizzes yet. Your history will appear here.</p>'}</div></div>`)}
+function start(daily){clr();const cfg=daily?{cat:'Mixed',diff:'m',n:5,timer:false,mode:'practice',bonus:true}:{...C},pool=cfg.cat=='Mixed'?Q:Q.filter(q=>q[0]==cfg.cat);let sel;
+if(daily)sel=sh(Q,rng(hash(today()))).slice(0,5);else{sel=[...sh(pool.filter(q=>q[1]==cfg.diff)),...sh(pool.filter(q=>q[1]!=cfg.diff))].slice(0,cfg.n);sel=sh(sel)}
+Object.assign(S,{screen:'quiz',cfg,daily,qs:sel.map(q=>({c:q[0],d:q[1],t:q[2],e:q[4],o:sh(q[3].map((t,i)=>({t,ok:i==0})))})),ans:[],cur:0,done:false,paused:false,t0:Date.now(),pm:0,endT:0,tot:cfg.timer?sel.length*30:0,rf:'all'});
+tid=setInterval(tick,250);scrollTo(0,0);quiz()}
+function quiz(){const q=S.qs[S.cur],a=S.ans[S.cur],pr=S.cfg.mode=='practice',lk=pr&&a!=null,r=score(S.qs,S.ans,S.cfg.bonus),n=S.qs.length,ad=S.ans.filter(x=>x!=null).length;
+app(`<div class="card ${S.paused?'pz':''}"><div class="qh"><b>Question ${S.cur+1} of ${n}</b>${pr?`<span>⭐ ${r.total} pts</span><span>🔥 Streak ${r.run}</span>`:'<span class="demo">Exam mode</span>'}<span id="tm" class="tm" role="timer"></span><button class="chip" data-a="ps">⏸ Pause</button><button class="chip" data-a="qt">✕ Quit</button></div>
+<div class="bar" role="progressbar" aria-label="Questions answered" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${ad}"><i style="width:${ad/n*100}%"></i></div><p class="demo">${q.c} · ${DL[q.d]}</p><h2 id="qq">${q.t}</h2>
+<div class="opts" role="group" aria-labelledby="qq">${q.o.map((o,i)=>{let c='opt',m=a==i?'Selected':'';if(lk){m='';if(o.ok){c+=' ok';m='✓ Correct'}else if(i==a){c+=' bad';m='✗ Incorrect'}}else if(a==i)c+=' sel';return`<button class="${c}" data-o="${i}" aria-pressed="${a==i}"><b>${'ABCD'[i]}</b><span>${o.t}</span><em>${m}</em></button>`}).join('')}</div>
+${lk?`<div class="fb ${q.o[a].ok?'okf':'badf'}"><b>${q.o[a].ok?'✓ Correct!':'✗ Not quite.'}</b> ${q.e}</div>`:''}
+<div class="row between"><button class="btn g" data-a="pv" ${S.cur?'':'disabled'}>← Previous</button>${S.cur<n-1?'<button class="btn" data-a="nx">Next →</button>':'<button class="btn" data-a="fn">Submit quiz</button>'}</div></div>
+<div class="card"><b>Questions</b> <span class="demo">● answered · ○ unanswered · outlined = current</span><div class="nvg">${S.qs.map((_,i)=>`<button class="nv ${i==S.cur?'cur':''} ${S.ans[i]!=null?'an':''}" data-g="${i}" aria-label="Question ${i+1}, ${S.ans[i]!=null?'answered':'unanswered'}${i==S.cur?', current':''}">${i+1} ${S.ans[i]!=null?'●':'○'}</button>`).join('')}</div></div>`);tick()}
+function pick(i){const pr=S.cfg.mode=='practice';if(S.done||S.paused||(pr&&S.ans[S.cur]!=null))return;S.ans[S.cur]=i;const ok=S.qs[S.cur].o[i].ok;pr?(ok?snd.ok():snd.bad()):snd.sel();say(pr?(ok?'Correct':'Incorrect. '+S.qs[S.cur].e):'Answer saved');quiz()}
+const modal=h=>{$('#dg').innerHTML=h;if(!$('#dg').open)$('#dg').showModal()},shut=()=>$('#dg').open&&$('#dg').close();
+function pause(c){if(S.paused||S.done)return;S.paused=true;S.ps=Date.now();$('#app').firstElementChild.classList.add('pz');modal(c||'<h2>⏸ Paused</h2><p class="demo" style="margin:.5rem 0 1rem">The timer is stopped.</p><div class="row"><button class="btn" data-a="rs">Resume</button><button class="btn g" data-a="qt">Quit</button></div>')}
+function resume(){if(!S.paused)return;S.pm+=Date.now()-S.ps;S.paused=false;$('#app').firstElementChild&&$('#app').firstElementChild.classList.remove('pz')}
+$('#dg').addEventListener('close',()=>{if(S.paused&&S.screen=='quiz')resume()});
+function finish(){if(S.done)return;S.done=true;clr();if(S.paused){S.pm+=Date.now()-S.ps;S.paused=false}shut();S.endT=Date.now();
+const r=score(S.qs,S.ans,S.cfg.bonus);r.time=Math.round(S.tot?Math.min(el(),S.tot):el());S.res=r;S.screen='res';
+const cats={};S.qs.forEach((q,i)=>{const x=cats[q.c]=cats[q.c]||[0,0];x[1]++;if(S.ans[i]!=null&&q.o[S.ans[i]].ok)x[0]++});r.cats=cats;
+P.plays++;P.best=Math.max(P.best,r.total);P.hist.unshift({d:today(),c:r.c,n:S.qs.length,pct:r.pct,total:r.total,cat:S.daily?'Daily':S.cfg.cat});P.hist=P.hist.slice(0,20);if(!P.days.includes(today()))P.days.push(today());P.days=P.days.slice(-60);if(S.daily)P.daily={date:today(),score:r.c};
+const nw=AC.filter(a=>!P.ach.includes(a[0])&&a[3]({...r,hard:!S.daily&&S.cfg.diff=='h',daily:S.daily}));nw.forEach(a=>P.ach.push(a[0]));sv('qz-p',P);r.nw=nw;scrollTo(0,0);results()}
+function results(){const r=S.res,n=S.qs.length;snd.done();
+app(`<div class="card" style="text-align:center"><h2>${msg(r.pct)}</h2><div class="ring"><svg viewBox="0 0 120 120"><circle class="t" cx="60" cy="60" r="52"/><circle class="p" id="rp" cx="60" cy="60" r="52"/></svg><b id="rn">0%</b></div>
+<h1 style="font-size:2.2rem;margin-top:.6rem">${r.c}/${n}</h1><p class="demo">${r.pct}% correct · ${r.total} pts (${r.raw} base${S.cfg.bonus?` + ${r.bonus} streak bonus`:''}) · formula: 10/20/30 per Easy/Medium/Hard${S.cfg.bonus?', +5 per prior consecutive correct (max +25)':''}</p>
+<div class="stats"><div><b>${r.c}</b>Correct ✓</div><div><b>${r.w}</b>Incorrect ✗</div><div><b>${r.u}</b>Unanswered</div><div><b>${fmt(r.time)}</b>Time</div></div>
+${r.nw.length?`<p>🎉 Unlocked: ${r.nw.map(a=>'<b>'+a[1]+'</b>').join(', ')}</p>`:''}
+${Object.keys(r.cats).length>1?'<h2 style="margin-top:1rem;text-align:left">By category</h2>'+Object.entries(r.cats).map(([k,v])=>`<div class="cb"><span style="text-align:left">${k}</span><div><i style="width:${v[0]/v[1]*100}%"></i></div><span>${v[0]}/${v[1]}</span></div>`).join(''):''}
+<div class="row" style="justify-content:center;margin-top:1.2rem"><button class="btn" data-a="again">Play Again</button><button class="btn g" data-a="rev">Review Answers</button><button class="btn g" data-a="cat">Choose Another Category</button><button class="btn g" data-a="home">Return Home</button><button class="btn g" data-a="share">Share Results</button></div></div>`);
+if(r.nw.length)setTimeout(snd.ach,900);setTimeout(()=>{$('#rp').style.strokeDashoffset=326.7*(1-r.pct/100);let i=0;const t=setInterval(()=>{i=Math.min(r.pct,i+3);$('#rn').textContent=i+'%';if(i>=r.pct)clearInterval(t)},RM?1:25)},100);if(r.pct>=70&&!RM)confetti()}
+function review(){S.screen='rev';const f=S.rf,st=i=>S.ans[i]==null?'u':S.qs[i].o[S.ans[i]].ok?'c':'w',L={c:'✓ Correct',w:'✗ Incorrect',u:'– Unanswered'};
+app(`<div class="card"><h2>Answer review</h2><div class="row" style="margin-bottom:1rem">${[['all','All Questions'],['c','Correct Answers'],['w','Incorrect Answers'],['u','Unanswered Questions']].map(x=>`<button class="chip" data-rf="${x[0]}" aria-pressed="${f==x[0]}">${x[1]}</button>`).join('')}</div>
+${S.qs.map((q,i)=>({q,i})).filter(o=>f=='all'||st(o.i)==f).map(({q,i})=>`<div class="ri"><span class="st ${st(i)}">${L[st(i)]}</span> <span class="demo">· Q${i+1} · ${q.c} · ${DL[q.d]}</span><h3>${q.t}</h3><p>Your answer: <b>${S.ans[i]==null?'None':q.o[S.ans[i]].t}</b></p><p>Correct answer: <b>${q.o.find(o=>o.ok).t}</b></p><p class="demo">${q.e}</p></div>`).join('')||'<p class="demo">Nothing in this filter.</p>'}
+<div class="row"><button class="btn" data-a="back">← Back to results</button><button class="btn g" data-a="home">Return Home</button></div></div>`)}
+function confetti(){const c=$('#cf'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;const p=Array.from({length:70},()=>({x:Math.random()*c.width,y:-20-Math.random()*200,v:2+Math.random()*3,s:5+Math.random()*5,h:Math.random()*360})),t0=Date.now();
+(function f(){x.clearRect(0,0,c.width,c.height);p.forEach(o=>{o.y+=o.v;x.fillStyle=`hsl(${o.h} 80% 60%)`;x.fillRect(o.x,o.y,o.s,o.s)});Date.now()-t0<2500?requestAnimationFrame(f):x.clearRect(0,0,c.width,c.height)})()}
+function ask(){const un=S.qs.length-S.ans.filter(x=>x!=null).length;un?modal(`<h2>Submit quiz?</h2><p style="margin:.6rem 0 1rem">${un} question${un>1?'s are':' is'} unanswered and will score no points.</p><div class="row"><button class="btn" data-a="sub">Submit anyway</button><button class="btn g" data-a="keep">Keep going</button></div>`):finish()}
+async function share(){const r=S.res,t=`I scored ${r.c}/${S.qs.length} (${r.pct}%) on QUIZORA — ${S.daily?'Daily Challenge':S.cfg.cat+', '+DL[S.cfg.diff]}. Can you beat it?`;try{if(navigator.share){await navigator.share({text:t});return}await navigator.clipboard.writeText(t);toast('Result copied to clipboard')}catch(e){if(e&&e.name=='AbortError')return;try{await navigator.clipboard.writeText(t);toast('Result copied to clipboard')}catch(e2){toast('Couldn’t share or copy: '+t)}}}
+// actions
+const A={go:()=>start(false),daily:()=>start(true),how:()=>modal('<h2>How to play</h2><ul><li>Choose a category, difficulty and length, then start.</li><li><b>Practice</b> shows feedback instantly; <b>Exam</b> reveals answers at the end.</li><li>Easy/Medium/Hard earn 10/20/30 points; streaks add bonus points.</li><li>With the timer on, you get 30 seconds per question in total.</li><li>Keys: 1–4 pick an answer, ← → move between questions.</li></ul><br><button class="btn" data-a="keep">Got it</button>'),
+ps:()=>pause(),rs:shut,keep:shut,qt:()=>pause('<h2>Quit this quiz?</h2><p style="margin:.6rem 0 1rem">Your progress will be lost.</p><div class="row"><button class="btn g" data-a="keep">Keep playing</button><button class="btn" data-a="quit">Quit</button></div>'),quit:()=>{S.paused=false;S.done=true;shut();home()},
+pv:()=>{S.cur--;quiz()},nx:()=>{S.cur++;quiz()},fn:ask,sub:finish,again:()=>start(S.daily),rev:review,back:()=>results(),cat:home,home,share,
+snd:()=>{C.sound=!C.sound;sv('qz-c',C);sy();if(C.sound)snd.sel()},thm:()=>{const d=document.documentElement,dark=d.dataset.theme?d.dataset.theme=='dark':matchMedia('(prefers-color-scheme:dark)').matches;C.theme=d.dataset.theme=dark?'light':'dark';sv('qz-c',C)}};
+const sy=()=>{const b=$('#snd');b.textContent=C.sound?'🔊':'🔇';b.setAttribute('aria-pressed',C.sound)};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a],[data-k],[data-o],[data-g],[data-rf]');if(!t)return;const d=t.dataset;
+if(d.a)A[d.a]&&A[d.a]();else if(d.k){C[d.k]=JSON.parse(d.v);sv('qz-c',C);$('#su').innerHTML=setup();$(`#su [data-k="${d.k}"][data-v='${d.v}']`).focus()}else if(d.o)pick(+d.o);else if(d.g){S.cur=+d.g;quiz()}else if(d.rf){S.rf=d.rf;review()}});
+document.addEventListener('keydown',e=>{if(S.screen!='quiz'||S.paused||$('#dg').open)return;if(/^[1-4]$/.test(e.key))pick(+e.key-1);if(e.key=='ArrowRight'&&S.cur<S.qs.length-1){S.cur++;quiz()}if(e.key=='ArrowLeft'&&S.cur>0){S.cur--;quiz()}});
+if(C.theme)document.documentElement.dataset.theme=C.theme;sy();home();
+</script></body></html>
