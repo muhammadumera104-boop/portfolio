@@ -60,7 +60,7 @@ service cloud.firestore {
       allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'subject', 'message', 'read', 'createdAt'])
         && textBetween(request.resource.data.name, 2, 80)
         && textBetween(request.resource.data.email, 5, 120)
-        && request.resource.data.email.matches('^[^@\s]+@[^@\s]+\.[^@\s]+$')
+        && request.resource.data.email.matches('^[^@ ]+@[^@ ]+[.][^@ ]+$')
         && textBetween(request.resource.data.subject, 0, 120)
         && textBetween(request.resource.data.message, 10, 4000)
         && request.resource.data.read == false
