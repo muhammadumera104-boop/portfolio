@@ -287,6 +287,18 @@
   color: var(--fg);
 }
 
+.site-footer__admin {
+  margin-top: var(--s-2);
+  color: var(--fg-muted);
+  font-size: var(--fs-small);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer__admin:hover {
+  color: var(--fg);
+}
+
 .site-footer__wordmark {
   margin: 0 0 -0.2em;
   padding-inline: calc(var(--gutter) * 0.5);

@@ -118,6 +118,7 @@ export const footer = (base = '') => `
       <p>© <span data-year>2026</span> ${esc(profile.name)}</p>
       <p>${esc(profile.location)}</p>
       <a class="link-arrow" href="${base}#home">Back to top ${arrow('up')}</a>
+      <a class="site-footer__admin" href="admin.html" rel="nofollow">Admin sign in</a>
     </div>
   </div>
   <p class="site-footer__wordmark" aria-hidden="true">M<span>.</span>Umer</p>
