@@ -375,6 +375,21 @@ a.filter {
   border-radius: var(--radius-s);
 }
 
+/* YouTube embeds (post pages and the admin editor) stay 16:9 at any width */
+.prose [data-youtube-video] {
+  max-width: 100%;
+}
+
+.prose iframe {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: var(--ink);
+}
+
 .share {
   display: flex;
   flex-wrap: wrap;

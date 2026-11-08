@@ -1,6 +1,6 @@
 // Single post page: content, share buttons, related posts and comments.
-import DOMPurify from 'dompurify';
 import { mountShell, setMeta } from './shell.js';
+import { cleanPostHtml } from '../shared/sanitize.js';
 import { getPostBySlug, listPublishedPosts, countView, listComments, addComment } from '../firebase/api.js';
 import { firebaseReady } from '../firebase/app.js';
 import { commentSchema, fieldErrors } from '../shared/schemas.js';
@@ -12,14 +12,9 @@ import { esc, list } from '../render/util.js';
 const main = mountShell({ current: 'blog.html' });
 const slug = new URLSearchParams(location.search).get('slug') || '';
 
-// Post HTML is written by the site owner in the admin editor, but it is sanitised anyway.
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'A' && node.getAttribute('href')) {
-    node.setAttribute('target', '_blank');
-    node.setAttribute('rel', 'noopener noreferrer');
-  }
-});
-const clean = (html) => DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+// Post HTML is written by the site owner in the admin editor, but it is sanitised anyway
+// (src/shared/sanitize.js): ordinary formatting plus YouTube embeds, nothing else.
+const clean = cleanPostHtml;
 
 const notice = (title, text) => {
   main.innerHTML = `<section class="container page-head"><h1 class="page-head__title">${esc(title)}</h1>
