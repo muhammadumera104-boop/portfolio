@@ -71,8 +71,11 @@ export function initContactForm() {
     form.classList.add('is-sending');
     status.textContent = 'Sending…';
     try {
-      // Save to the inbox and email the owner in parallel; report only what actually happened.
-      const [saved, emailed] = await Promise.all([saveToInbox(result.data), notifyOwner(result.data)]);
+      // The server saves the message to the dashboard inbox AND emails the owner in one request. The browser's own
+      // Firestore save is only a backup, used when the server could not save (offline, server error).
+      const server = await sendToServer(result.data);
+      const emailed = server?.emailed === true;
+      const saved = server?.saved === true || (await saveToInbox(result.data));
       const outcome = describeOutcome({ saved, emailed }, profile.email);
       status.textContent = outcome.message;
       status.dataset.state = outcome.kind;
@@ -102,8 +105,8 @@ async function saveToInbox(data) {
   }
 }
 
-/** True only when the server confirms the email went out (it answers { ok: false } when email is not set up). */
-async function notifyOwner(data) {
+/** @returns {Promise<{saved: boolean, emailed: boolean} | null>} what the server confirms, or null if it could not be reached */
+async function sendToServer(data) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
@@ -114,10 +117,11 @@ async function notifyOwner(data) {
       signal: controller.signal,
     });
     const body = await response.json().catch(() => ({}));
-    return response.ok && body.ok === true;
+    if (!response.ok) return null;
+    return { saved: body.saved === true, emailed: body.ok === true };
   } catch (error) {
-    console.error('[contact] email', error);
-    return false;
+    console.error('[contact] server', error);
+    return null;
   } finally {
     clearTimeout(timer);
   }
