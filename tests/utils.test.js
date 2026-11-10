@@ -60,6 +60,13 @@ describe('relatedPosts', () => {
     expect(relatedPosts(a, all).map((p) => p.id)).toEqual(['c', 'b']);
   });
   it('respects the count', () => expect(relatedPosts(a, all, 1)).toHaveLength(1));
+  it('counts a shared category, and with fill tops up with the newest other posts', () => {
+    const x = { id: 'x', tags: ['Z'], category: 'Algorithms' };
+    const pool = [x, { id: 'y', tags: [], category: 'Algorithms', createdAt: '2026-01-01' }, { id: 'n1', tags: [], category: 'Web', createdAt: '2026-05-01' }, { id: 'n2', tags: [], category: 'Web', createdAt: '2026-09-01' }];
+    expect(relatedPosts(x, pool).map((p) => p.id)).toEqual(['y']);
+    expect(relatedPosts(x, pool, 3, { fill: true }).map((p) => p.id)).toEqual(['y', 'n2', 'n1']);
+    expect(relatedPosts(x, pool, 3, { fill: true }).some((p) => p.id === 'x')).toBe(false);
+  });
 });
 
 describe('newestFirst', () => {

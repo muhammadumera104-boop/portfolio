@@ -14,6 +14,15 @@ export function resolveSiteUrl(env = {}) {
   return String(raw).replace(/\/+$/, '');
 }
 
+const GA_ID = /^G-[A-Z0-9]{4,20}$/;
+
+/** Google Analytics 4, only when a valid measurement id (G-XXXXXXXX) is configured. IP anonymisation is on. */
+export const analyticsSnippet = (id) =>
+  GA_ID.test(String(id || ''))
+    ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${id}',{anonymize_ip:true});</script>`
+    : '';
+
 const tag = (name, content) => (content ? `<meta name="${name}" content="${esc(content)}">` : '');
 const prop = (name, content) => (content ? `<meta property="${name}" content="${esc(content)}">` : '');
 
@@ -25,7 +34,7 @@ const prop = (name, content) => (content ? `<meta property="${name}" content="${
 export function headBlock({
   siteUrl, title, description, path, image, imageAlt, imageSize, type = 'website', jsonLd,
   robots = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
-  published, modified, tags = [], verification = '',
+  published, modified, tags = [], verification = '', bing = '', analyticsId = '',
 }) {
   const canonical = `${siteUrl}${path}`;
   return [
@@ -34,6 +43,7 @@ export function headBlock({
     tag('author', SITE.name),
     tag('robots', robots),
     tag('google-site-verification', verification),
+    tag('msvalidate.01', bing),
     `<link rel="canonical" href="${esc(canonical)}">`,
     prop('og:site_name', SITE.name),
     prop('og:locale', SITE.locale),
@@ -55,6 +65,7 @@ export function headBlock({
     tag('twitter:image', image),
     tag('twitter:image:alt', imageAlt),
     jsonLd ? `<script type="application/ld+json" data-ld="page">${jsonLdText(jsonLd)}</script>` : '',
+    analyticsSnippet(analyticsId),
   ]
     .filter(Boolean)
     .join('\n  ');

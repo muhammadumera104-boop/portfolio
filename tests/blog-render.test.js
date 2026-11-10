@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { postCard, thumbnailOf, videoGuidesHtml, articleHtml, blogPageHtml } from '../src/render/blog.js';
-import { builtInPosts, withBuiltInMedia } from '../src/data/posts.js';
+import { postCard, thumbnailOf, videoGuidesHtml, articleHtml, blogPageHtml, resourcesHtml, authorBoxHtml } from '../src/render/blog.js';
+import { filterPosts } from '../src/shared/utils.js';
+import { builtInPosts, withBuiltInDefaults } from '../src/data/posts.js';
 import { normalizeVideos } from '../src/shared/media.js';
 import { postSchema } from '../src/shared/schemas.js';
 
@@ -110,18 +111,18 @@ describe('built-in post media', () => {
       expect(result.success, `${post.slug}: ${result.success ? '' : JSON.stringify(result.error.issues)}`).toBe(true);
     }
   });
-  it('withBuiltInMedia fills a missing thumbnail and videos for seeded posts, but never overrides the dashboard', () => {
+  it('withBuiltInDefaults fills a missing thumbnail and videos for seeded posts, but never overrides the dashboard', () => {
     const seeded = { slug: builtInPosts[0].slug, coverImage: '' };
-    const filled = withBuiltInMedia(seeded);
+    const filled = withBuiltInDefaults(seeded);
     expect(filled.coverImage).toBe(builtInPosts[0].coverImage);
     expect(filled.videos).toEqual(builtInPosts[0].videos);
 
-    const edited = withBuiltInMedia({ slug: builtInPosts[0].slug, coverImage: 'https://res.cloudinary.com/x/image/upload/a.jpg', videos: [] });
+    const edited = withBuiltInDefaults({ slug: builtInPosts[0].slug, coverImage: 'https://res.cloudinary.com/x/image/upload/a.jpg', videos: [] });
     expect(edited.coverImage).toContain('cloudinary');
     expect(edited.videos).toEqual([]);
 
     const custom = { slug: 'my-own-post', coverImage: '' };
-    expect(withBuiltInMedia(custom)).toBe(custom);
+    expect(withBuiltInDefaults(custom)).toBe(custom);
   });
   it('the schema accepts videos as strings (older data) or objects and rejects other links', () => {
     const ok = (videos) => postSchema.safeParse({ ...builtInPosts[0], videos }).success;
@@ -129,5 +130,71 @@ describe('built-in post media', () => {
     expect(ok(['https://evil.example/x'])).toBe(false);
     expect(ok(['javascript:alert(1)'])).toBe(false);
     expect(ok(Array.from({ length: 7 }, (_, i) => `https://vimeo.com/12345678${i}`))).toBe(false);
+  });
+});
+
+describe('subtitle, category, further reading and author box', () => {
+  const post = { ...base, subtitle: 'A <b>sub</b>title', category: 'Algorithms', resources: [{ url: 'https://example.org/a', title: 'Ref A' }, { url: 'http://insecure.example/x', title: 'no' }, { url: 'javascript:alert(1)', title: 'no' }], authorName: 'Muhammad Umer Rizwan' };
+
+  it('shows the subtitle (escaped) and a category link on the post', () => {
+    const html = articleHtml(post, { url: 'https://example.com/blog/a-post/', bodyHtml: '' });
+    expect(html).toContain('<p class="article__subtitle">A &lt;b&gt;sub&lt;/b&gt;title</p>');
+    expect(html).toContain('href="/blog/?category=Algorithms"');
+  });
+  it('lists only https references, each opening in a new tab', () => {
+    const html = resourcesHtml(post.resources);
+    expect(html).toContain('Further reading');
+    expect(html).toContain('href="https://example.org/a"');
+    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).not.toContain('insecure.example');
+    expect(html).not.toContain('javascript:');
+    expect(resourcesHtml([])).toBe('');
+  });
+  it('shows the category on the card', () => {
+    expect(postCard(post)).toContain('post-card__cat">Algorithms');
+  });
+  it('the author box names the author and links to about, contact and profiles', () => {
+    const html = authorBoxHtml(post);
+    expect(html).toContain('Muhammad Umer Rizwan');
+    expect(html).toContain('href="/#about"');
+    expect(html).toContain('href="/#contact"');
+    expect(html).toContain('github.com/muhammadumera104-boop');
+    expect(html).toContain('alt="Portrait of Muhammad Umer Rizwan"');
+  });
+  it('a guest author gets a name only, with no portrait or profile links', () => {
+    const html = authorBoxHtml({ ...post, authorName: 'Guest Writer' });
+    expect(html).toContain('Guest Writer');
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain('href="/#about"');
+  });
+  it('filters by category, and the search also matches subtitle and category', () => {
+    const posts = [{ ...base, category: 'Systems' }, { ...base, slug: 'b', title: 'B', category: 'Security', subtitle: 'zebra' }];
+    expect(filterPosts(posts, { category: 'Security' })).toHaveLength(1);
+    expect(filterPosts(posts, { search: 'zebra' })).toHaveLength(1);
+    expect(filterPosts(posts, { search: 'systems' })).toHaveLength(1);
+    expect(filterPosts(posts, { category: 'Nope' })).toHaveLength(0);
+  });
+  it('every built-in post has a subtitle, a category and verified https references, and passes the schema', () => {
+    for (const p of builtInPosts) {
+      expect(p.subtitle, p.slug).not.toBe('');
+      expect(p.category, p.slug).not.toBe('');
+      expect(p.resources.length, p.slug).toBeGreaterThan(0);
+      expect(postSchema.safeParse(p).success, p.slug).toBe(true);
+    }
+  });
+  it('withBuiltInDefaults backfills subtitle, category and resources but not over dashboard edits', () => {
+    const filled = withBuiltInDefaults({ slug: builtInPosts[0].slug });
+    expect(filled.subtitle).toBe(builtInPosts[0].subtitle);
+    expect(filled.category).toBe('Systems');
+    const edited = withBuiltInDefaults({ slug: builtInPosts[0].slug, category: 'Mine', resources: [] });
+    expect(edited.category).toBe('Mine');
+    expect(edited.resources).toEqual([]);
+  });
+  it('the schema rejects non-https reference links', () => {
+    const ok = (resources) => postSchema.safeParse({ ...builtInPosts[0], resources }).success;
+    expect(ok([{ url: 'https://example.org/a', title: 'A' }])).toBe(true);
+    expect(ok(['https://example.org/a'])).toBe(true);
+    expect(ok([{ url: 'http://example.org/a' }])).toBe(false);
+    expect(ok([{ url: 'javascript:alert(1)' }])).toBe(false);
   });
 });

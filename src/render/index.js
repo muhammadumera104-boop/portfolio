@@ -16,6 +16,7 @@ ${header()}
   ${projectsSection()}
   ${approachSection()}
   ${educationSection()}
+  <!--latest-posts-->
   ${contactSection()}
 </main>
 ${footer()}`;

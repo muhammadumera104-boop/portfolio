@@ -58,13 +58,14 @@ export function formatDate(value, locale = 'en-GB') {
   return date ? date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 }
 
-/** Case-insensitive match against title, excerpt and tags, plus an optional tag filter. */
-export function filterPosts(posts, { search = '', tag = '' } = {}) {
+/** Case-insensitive match against title, subtitle, excerpt, category and tags, plus optional tag and category filters. */
+export function filterPosts(posts, { search = '', tag = '', category = '' } = {}) {
   const needle = search.trim().toLowerCase();
   return posts.filter((post) => {
     if (tag && !(post.tags || []).includes(tag)) return false;
+    if (category && post.category !== category) return false;
     if (!needle) return true;
-    const haystack = [post.title, post.excerpt, ...(post.tags || [])].join(' ').toLowerCase();
+    const haystack = [post.title, post.subtitle, post.excerpt, post.category, ...(post.tags || [])].join(' ').toLowerCase();
     return haystack.includes(needle);
   });
 }
@@ -77,14 +78,18 @@ export function paginate(items, page = 1, perPage = 6) {
   return { items: items.slice(start, start + perPage), page: current, pages, total: items.length };
 }
 
-/** Other published posts that share the most tags with `post`. */
-export function relatedPosts(post, all, count = 3) {
+/**
+ * Other published posts that share tags (or the category) with `post`, best match first.
+ * With `fill`, empty slots are topped up with the newest remaining posts so a post always has something to read next.
+ */
+export function relatedPosts(post, all, count = 3, { fill = false } = {}) {
   const tags = new Set(post.tags || []);
-  return all
+  const scored = all
     .filter((p) => p.id !== post.id)
-    .map((p) => ({ post: p, score: (p.tags || []).filter((t) => tags.has(t)).length }))
-    .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score)
+    .map((p) => ({ post: p, score: (p.tags || []).filter((t) => tags.has(t)).length + (post.category && p.category === post.category ? 1 : 0) }))
+    .sort((a, b) => b.score - a.score || newestFirst(a.post, b.post));
+  return scored
+    .filter((entry) => fill || entry.score > 0)
     .slice(0, count)
     .map((entry) => entry.post);
 }

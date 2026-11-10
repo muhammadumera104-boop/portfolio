@@ -52,7 +52,8 @@ The build uses absolute paths (`base: '/'`) because pages such as `/blog/<slug>/
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | image and video uploads from the dashboard | **API secret: yes** |
 | `SMTP_USER`, `SMTP_PASS` | emails: new-message alerts and replies | **password: yes** |
 | `VITE_SITE_URL` (optional) | canonical links, sitemap, share previews; set it when you add a custom domain | no |
-| `VITE_GOOGLE_SITE_VERIFICATION` (optional) | Google Search Console verification tag | no |
+| `VITE_GOOGLE_SITE_VERIFICATION`, `VITE_BING_SITE_VERIFICATION` (optional) | Google Search Console and Bing Webmaster Tools verification tags | no |
+| `VITE_GA_MEASUREMENT_ID` (optional) | Google Analytics 4 (`G-XXXXXXXXXX`); nothing loads without it | no |
 
 Never put secrets in a variable that starts with `VITE_`: those are shipped to every visitor's browser. See `.env.example`.
 
@@ -68,9 +69,17 @@ Each blog post has a **thumbnail** (cover image, or the first video's thumbnail 
 - Dashboard replies are sent from your address over SMTP (`/api/reply`, owner only) with Reply-To set to you, and the thread is kept on the message.
 - Gmail needs an **app password** (Google Account → Security → 2-Step Verification → App passwords), not your normal password.
 
+### Projects
+
+Every project in *More work* has its own page at `/projects/<slug>/` with the description, key features, development process, challenges and solutions, screenshots, a demo video, and links to the live site and GitHub. Sections you leave empty are simply not shown. Fill them in under **Projects** in the dashboard: screenshots take `image link | alt text` (alt text is required) and have an upload button; challenges take `challenge | solution`.
+
 ### Search engines (SEO)
 
-Every deploy prerenders the home page, `/blog/` and each published post to plain HTML (so crawlers need no JavaScript) with titles, descriptions, canonical URLs, Open Graph/Twitter tags and schema.org data, and generates `sitemap.xml` and `robots.txt`. Published posts are read from Firestore **at build time**, so a post you publish in the dashboard appears in the sitemap and gets its prerendered page after the next deploy. Until then it still works through the live page. Redeploy after publishing (push any commit, or *Redeploy* in Vercel).
+Every deploy prerenders the home page, `/blog/`, each published post and each project to plain HTML (so crawlers need no JavaScript) with titles, descriptions, canonical URLs, Open Graph/Twitter tags and schema.org data, and generates `sitemap.xml` and `robots.txt`. Published posts are read from Firestore **at build time**, so a post you publish in the dashboard appears in the sitemap and gets its prerendered page after the next deploy. Until then it still works through the live page. Redeploy after publishing (push any commit, or *Redeploy* in Vercel).
+
+Schema.org data covers the person, website, blog posts (with breadcrumbs), projects (software application or creative work) and the project list. The security headers and a content-security-policy are set in `vercel.json`. A branded 404 page is served for unknown addresses.
+
+Setup after the first deploy: open [Google Search Console](https://search.google.com/search-console), add the site (URL-prefix property), choose the *HTML tag* method and put the code in `VITE_GOOGLE_SITE_VERIFICATION`, redeploy, click *Verify*, then submit `/sitemap.xml` under *Sitemaps*. For Bing, open [Bing Webmaster Tools](https://www.bing.com/webmasters), import the site from Search Console (or use the meta-tag method with `VITE_BING_SITE_VERIFICATION`) and submit the same sitemap.
 
 No site can be guaranteed a top Google ranking. What helps most: submit the sitemap in [Google Search Console](https://search.google.com/search-console), use your own domain, publish posts regularly, and link to the site from your GitHub and LinkedIn profiles.
 

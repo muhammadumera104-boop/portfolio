@@ -4,6 +4,7 @@
 import { HttpError, handle, jsonBody } from './_lib/http.js';
 import { requireAdmin } from './_lib/auth.js';
 import { buildReply, mailConfig, replySchema, sendMail } from './_lib/mail.js';
+import { resolveSiteUrl } from '../build/seo.js';
 
 export default handle(async (req) => {
   await requireAdmin(req);
@@ -11,7 +12,7 @@ export default handle(async (req) => {
   if (!parsed.success) throw new HttpError(400, 'Please check the visitor email address and write a reply first.');
   const { owner } = mailConfig();
   try {
-    await sendMail(buildReply(parsed.data, { owner }));
+    await sendMail(buildReply(parsed.data, { owner, siteUrl: resolveSiteUrl(process.env) }));
   } catch (error) {
     if (error instanceof HttpError) throw error;
     console.error('[reply]', error.message);

@@ -14,7 +14,10 @@ import {
 } from '../shared/schemas.js';
 import { slugify, readingTime, makeExcerpt, formatDate, toDate, parseCsv, parseLines } from '../shared/utils.js';
 import { esc, list } from '../render/util.js';
-import { parseVideoLines, formatVideoLines, thumbnail } from '../shared/media.js';
+import {
+  parseVideoLines, formatVideoLines, parseResourceLines, formatResourceLines, parseScreenshotLines, formatScreenshotLines,
+  parseChallengeLines, formatChallengeLines, thumbnail,
+} from '../shared/media.js';
 
 const root = document.getElementById('admin-root');
 const state = { user: null, tab: 'overview', editor: null };
@@ -177,8 +180,10 @@ function viewPostForm(post = null) {
   <header class="admin__head"><h1>${post ? 'Edit post' : 'New post'}</h1><button type="button" class="btn btn--line btn--sm" data-tab="blog">Back to posts</button></header>
   <form class="form" data-post-form="${post ? esc(post.id) : ''}" novalidate>
     <div class="field"><label for="p-title">Title</label><input id="p-title" name="title" maxlength="140" value="${esc(post?.title || '')}" required><p class="field__error" data-err="title"></p></div>
+    <div class="field"><label for="p-subtitle">Subtitle (one line under the title)</label><input id="p-subtitle" name="subtitle" maxlength="200" value="${esc(post?.subtitle || '')}"><p class="field__error" data-err="subtitle"></p></div>
     <div class="field"><label for="p-slug">Slug (the address of the post)</label><input id="p-slug" name="slug" maxlength="80" value="${esc(post?.slug || '')}" required><p class="field__error" data-err="slug"></p></div>
     <div class="field"><label for="p-excerpt">Excerpt (leave empty to generate one)</label><textarea id="p-excerpt" name="excerpt" rows="2" maxlength="300">${esc(post?.excerpt || '')}</textarea><p class="field__error" data-err="excerpt"></p></div>
+    <div class="field"><label for="p-category">Category (one per post; used for the blog filter)</label><input id="p-category" name="category" maxlength="40" list="p-category-list" value="${esc(post?.category || '')}"><datalist id="p-category-list">${list([...new Set((state.posts || []).map((p) => p.category).filter(Boolean))], (c) => `<option value="${esc(c)}">`)}</datalist><p class="field__error" data-err="category"></p></div>
     <div class="field"><label for="p-tags">Tags (comma separated)</label><input id="p-tags" name="tags" value="${esc((post?.tags || []).join(', '))}"><p class="field__error" data-err="tags"></p></div>
     <div class="field">
       <label for="p-cover">Thumbnail (cover image) URL</label>
@@ -193,6 +198,11 @@ function viewPostForm(post = null) {
       <div class="inline"><textarea id="p-videos" name="videos" rows="3" placeholder="https://www.youtube.com/watch?v=… | What this video explains">${esc(formatVideoLines(post?.videos))}</textarea><button type="button" class="btn btn--line btn--sm" data-upload-video>Upload video</button></div>
       <input type="file" accept="video/*" hidden data-video-file>
       <p class="field__error" data-err="videos"></p>
+    </div>
+    <div class="field">
+      <label for="p-resources">Further reading: external references (one per line: https link | title)</label>
+      <textarea id="p-resources" name="resources" rows="3" placeholder="https://developer.mozilla.org/… | MDN: the topic">${esc(formatResourceLines(post?.resources))}</textarea>
+      <p class="field__error" data-err="resources"></p>
     </div>
     <div class="field"><span class="field__label">Content</span><div class="editor" data-editor></div><p class="field__error" data-err="content"></p></div>
     <label class="check"><input type="checkbox" name="published"${post?.published ? ' checked' : ''}> Published (visible on the public blog)</label>
@@ -210,8 +220,8 @@ async function submitPost(form) {
   const raw = Object.fromEntries(new FormData(form));
   const content = state.editor.isEmpty() ? '' : state.editor.getHTML();
   const data = {
-    title: raw.title, slug: raw.slug || slugify(raw.title), excerpt: raw.excerpt || makeExcerpt(content),
-    content, coverImage: raw.coverImage || '', videos: parseVideoLines(raw.videos), tags: parseCsv(raw.tags || ''), published: form.elements.published.checked,
+    title: raw.title, subtitle: raw.subtitle || '', category: raw.category || '', slug: raw.slug || slugify(raw.title), excerpt: raw.excerpt || makeExcerpt(content),
+    content, coverImage: raw.coverImage || '', videos: parseVideoLines(raw.videos), resources: parseResourceLines(raw.resources), tags: parseCsv(raw.tags || ''), published: form.elements.published.checked,
   };
   const result = postSchema.safeParse(data);
   if (!result.success) {
@@ -231,7 +241,10 @@ const CRUD = {
       ['title', 'Title', 'text'], ['slug', 'Slug (built-in projects use edutrack, algovisualizer, allocator)', 'text'],
       ['category', 'Category (used for filters, e.g. C++)', 'text'], ['kind', 'Kind (e.g. C++ · OOP)', 'text'], ['status', 'Status', 'text'],
       ['summary', 'Summary', 'textarea'], ['problem', 'Problem', 'textarea'], ['details', 'Implementation details (one per line)', 'lines'],
-      ['outcome', 'Outcome', 'textarea'], ['techStack', 'Tech stack (comma separated)', 'csv'], ['imageUrl', 'Image URL', 'text'],
+      ['features', 'Key features (one per line)', 'lines'], ['process', 'Development process', 'textarea'],
+      ['challenges', 'Challenges and solutions (one per line: challenge | solution)', 'pairs'],
+      ['outcome', 'Outcome', 'textarea'], ['techStack', 'Tech stack (comma separated)', 'csv'], ['imageUrl', 'Thumbnail image URL', 'text'],
+      ['screenshots', 'Screenshots (one per line: image link | alt text describing it)', 'shots'], ['demoVideo', 'Demo video link (YouTube, Vimeo or an https video file)', 'text'],
       ['liveUrl', 'Live URL', 'text'], ['githubUrl', 'GitHub URL', 'text'], ['featured', 'Featured', 'check'], ['displayOrder', 'Display order', 'number'],
     ],
     blank: { status: 'Concept project', displayOrder: 10 },
@@ -270,6 +283,8 @@ async function viewCrud(name) {
 }
 
 const toFieldValue = (type, value) => {
+  if (type === 'shots') return formatScreenshotLines(value);
+  if (type === 'pairs') return formatChallengeLines(value);
   if (type === 'csv') return (value || []).join(', ');
   if (type === 'lines') return (value || []).join('\n');
   return value ?? '';
@@ -282,7 +297,8 @@ function viewCrudForm(name, doc = null) {
     const v = toFieldValue(type, values[key]);
     const id = `f-${key}`;
     let control;
-    if (type === 'textarea' || type === 'lines') control = `<textarea id="${id}" name="${key}" rows="${type === 'lines' ? 5 : 3}">${esc(v)}</textarea>`;
+    if (type === 'shots') control = `<div class="inline"><textarea id="${id}" name="${key}" rows="4" placeholder="https://… | Home screen of the app">${esc(v)}</textarea><button type="button" class="btn btn--line btn--sm" data-upload-shot>Upload image</button></div><input type="file" accept="image/*" hidden data-shot-file>`;
+    else if (type === 'textarea' || type === 'lines' || type === 'pairs') control = `<textarea id="${id}" name="${key}" rows="${type === 'lines' || type === 'pairs' ? 5 : 3}">${esc(v)}</textarea>`;
     else if (Array.isArray(type)) control = `<select id="${id}" name="${key}">${type.map((o) => `<option${o === v ? ' selected' : ''}>${o}</option>`).join('')}</select>`;
     else if (type === 'check') return `<label class="check"><input type="checkbox" name="${key}"${values[key] ? ' checked' : ''}> ${label}</label>`;
     else control = `<input id="${id}" name="${key}" type="${type === 'number' ? 'number' : 'text'}" value="${esc(v)}">`;
@@ -302,7 +318,9 @@ async function submitCrud(form) {
   const raw = Object.fromEntries(new FormData(form));
   const data = {};
   cfg.fields.forEach(([key, , type]) => {
-    if (type === 'csv') data[key] = parseCsv(raw[key] || '');
+    if (type === 'shots') data[key] = parseScreenshotLines(raw[key] || '');
+    else if (type === 'pairs') data[key] = parseChallengeLines(raw[key] || '');
+    else if (type === 'csv') data[key] = parseCsv(raw[key] || '');
     else if (type === 'lines') data[key] = parseLines(raw[key] || '');
     else if (type === 'check') data[key] = form.elements[key].checked;
     else data[key] = raw[key] ?? '';
@@ -399,6 +417,7 @@ root.addEventListener('click', async (event) => {
   if (d.replyOpen) return openReplyForm(d.replyOpen);
   if ('replyCancel' in d) return t.closest('[data-reply-form]').remove();
   if ('uploadVideo' in d) return document.querySelector('[data-video-file]').click();
+  if ('uploadShot' in d) return document.querySelector('[data-shot-file]').click();
   if (d.read) {
     await act(() => api.setMessageRead(d.read, d.to === 'read'));
     return go('messages');
@@ -439,6 +458,19 @@ root.addEventListener('submit', async (event) => {
 });
 
 root.addEventListener('change', async (event) => {
+  if (event.target.matches('[data-shot-file]')) {
+    const [image] = event.target.files;
+    event.target.value = '';
+    if (!image) return;
+    toast('Uploading image…', 'info');
+    const link = await act(() => api.uploadImage(image, 'projects'), 'Image uploaded. Add a short description after the | so it has alt text.');
+    if (link) {
+      const box = document.getElementById('f-screenshots');
+      box.value = [box.value.trim(), `${link} | `].filter(Boolean).join('\n');
+      box.focus();
+    }
+    return;
+  }
   if (event.target.matches('[data-video-file]')) {
     const [video] = event.target.files;
     event.target.value = '';

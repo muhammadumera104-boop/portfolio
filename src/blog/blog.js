@@ -4,7 +4,7 @@
 import { mountShell, setMeta, setJsonLd } from './shell.js';
 import { listPublishedPosts } from '../firebase/api.js';
 import { firebaseReady } from '../firebase/app.js';
-import { builtInPosts, withBuiltInMedia } from '../data/posts.js';
+import { builtInPosts, withBuiltInDefaults } from '../data/posts.js';
 import { filterPosts, paginate, newestFirst } from '../shared/utils.js';
 import { blogJsonLd, jsonLdText, absoluteUrl } from '../shared/seo.js';
 import { blogPageHtml, postCard } from '../render/blog.js';
@@ -28,7 +28,7 @@ const tagBox = main.querySelector('[data-tags]');
 const search = main.querySelector('#blog-search');
 
 const params = new URLSearchParams(location.search);
-const state = { q: params.get('q') || '', tag: params.get('tag') || '', page: Number(params.get('page')) || 1, posts: [] };
+const state = { q: params.get('q') || '', tag: params.get('tag') || '', category: params.get('category') || '', page: Number(params.get('page')) || 1, posts: [] };
 search.value = state.q;
 
 const skeleton = () => list([1, 2, 3], () => '<div class="post-card post-card--skeleton skeleton" aria-hidden="true"></div>');
@@ -38,21 +38,26 @@ function sync() {
   const next = new URLSearchParams();
   if (state.q) next.set('q', state.q);
   if (state.tag) next.set('tag', state.tag);
+  if (state.category) next.set('category', state.category);
   if (state.page > 1) next.set('page', String(state.page));
   const query = next.toString();
   history.replaceState(null, '', `${location.pathname}${query ? `?${query}` : ''}`);
 }
 
 function render() {
+  // Categories are the main filter; posts without any fall back to filtering by tag.
+  const categories = [...new Set(state.posts.map((p) => p.category).filter(Boolean))].sort();
   const tags = [...new Set(state.posts.flatMap((p) => p.tags || []))].sort();
-  tagBox.innerHTML = tags.length
-    ? `<button type="button" class="filter${state.tag ? '' : ' is-active'}" data-tag="">All</button>${list(
-        tags,
-        (t) => `<button type="button" class="filter${state.tag === t ? ' is-active' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`,
+  const [kind, values, current] = categories.length ? ['category', categories, state.category] : ['tag', tags, state.tag];
+  tagBox.setAttribute('aria-label', kind === 'category' ? 'Filter by category' : 'Filter by tag');
+  tagBox.innerHTML = values.length
+    ? `<button type="button" class="filter${current ? '' : ' is-active'}" data-filter-kind="${kind}" data-value="" aria-pressed="${!current}">All</button>${list(
+        values,
+        (v) => `<button type="button" class="filter${current === v ? ' is-active' : ''}" data-filter-kind="${kind}" data-value="${esc(v)}" aria-pressed="${current === v}">${esc(v)}</button>`,
       )}`
     : '';
 
-  const filtered = filterPosts(state.posts, { search: state.q, tag: state.tag });
+  const filtered = filterPosts(state.posts, { search: state.q, tag: state.tag, category: state.category });
   const view = paginate(filtered, state.page, PER_PAGE);
   state.page = view.page;
 
@@ -83,9 +88,10 @@ search.addEventListener('input', () => {
   }, 200);
 });
 tagBox.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-tag]');
+  const button = event.target.closest('[data-filter-kind]');
   if (!button) return;
-  state.tag = button.dataset.tag;
+  if (button.dataset.filterKind === 'category') state.category = button.dataset.value;
+  else state.tag = button.dataset.value;
   state.page = 1;
   render();
 });
@@ -109,7 +115,7 @@ pager.addEventListener('click', (event) => {
       console.warn('[blog] using built-in posts:', error.message);
     }
   }
-  state.posts = live.length ? live.map(withBuiltInMedia) : [...builtInPosts].sort(newestFirst);
+  state.posts = live.length ? live.map(withBuiltInDefaults) : [...builtInPosts].sort(newestFirst);
   render();
   setJsonLd(jsonLdText(blogJsonLd(location.origin, state.posts)));
 })();

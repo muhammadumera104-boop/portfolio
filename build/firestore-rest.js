@@ -26,25 +26,30 @@ export function decodeDocument(doc) {
   return { id, ...decodeFields(doc.fields) };
 }
 
-export async function fetchPublishedPosts(projectId, { fetchImpl = fetch, timeoutMs = 10_000 } = {}) {
+/** Reads a whole collection (optionally filtered with a structuredQuery "where") and decodes the documents. */
+export async function fetchCollection(projectId, collectionId, { where, fetchImpl = fetch, timeoutMs = 10_000 } = {}) {
   const url = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents:runQuery`;
   const response = await fetchImpl(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     signal: AbortSignal.timeout(timeoutMs),
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: 'blog_posts' }],
-        where: { fieldFilter: { field: { fieldPath: 'published' }, op: 'EQUAL', value: { booleanValue: true } } },
-      },
-    }),
+    body: JSON.stringify({ structuredQuery: { from: [{ collectionId }], ...(where ? { where } : {}) } }),
   });
   if (!response.ok) throw new Error(`Firestore answered ${response.status}`);
   const rows = await response.json();
   return (Array.isArray(rows) ? rows : [])
     .filter((row) => row.document)
     .map((row) => {
-      const post = decodeDocument(row.document);
-      return { ...post, updatedAt: post.updatedAt || row.document.updateTime };
+      const doc = decodeDocument(row.document);
+      return { ...doc, updatedAt: doc.updatedAt || row.document.updateTime };
     });
 }
+
+export const fetchPublishedPosts = (projectId, options = {}) =>
+  fetchCollection(projectId, 'blog_posts', {
+    ...options,
+    where: { fieldFilter: { field: { fieldPath: 'published' }, op: 'EQUAL', value: { booleanValue: true } } },
+  });
+
+/** Every project document (the rules let anyone read projects). */
+export const fetchProjects = (projectId, options = {}) => fetchCollection(projectId, 'projects', options);

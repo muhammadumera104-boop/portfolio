@@ -1,5 +1,6 @@
 import { projects, webProjects } from '../../data/content.js';
 import { esc, list, arrow, heading, external } from '../util.js';
+import { projectPath } from '../../shared/seo.js';
 import { figures, minis } from '../visuals.js';
 
 const captions = {
@@ -62,6 +63,7 @@ const project = (p) => `
 // Links for a "More work" card. Works for static content and Firestore documents (same field names).
 // Relative paths such as demos/app.html stay on this site; both kinds open in a new tab.
 const cardLinks = (p) => `
+  ${p.slug ? `<a class="link-arrow" href="${esc(projectPath(p.slug))}">Details ${arrow('right')}</a>` : ''}
   ${p.liveUrl ? external(p.liveUrl, `${p.liveUrl.startsWith('demos/') ? 'Open demo' : 'Live site'} ${arrow('ne')}`, 'link-arrow') : '<span class="project__na label">Live demo not published</span>'}
   ${p.githubUrl ? external(p.githubUrl, `GitHub ${arrow('ne')}`, 'link-arrow') : ''}`;
 

@@ -13,6 +13,12 @@ const DATE = '2026-11-07';
 export const builtInPosts = [
   {
     slug: 'how-a-free-list-allocator-works',
+    subtitle: 'Blocks, a free list, and the merge step that stops memory from fragmenting.',
+    category: 'Systems',
+    resources: [
+      { url: 'https://en.wikipedia.org/wiki/C_dynamic_memory_allocation', title: 'C dynamic memory allocation (Wikipedia)' },
+      { url: 'https://en.wikipedia.org/wiki/Fragmentation_(computing)', title: 'Fragmentation in computing (Wikipedia)' },
+    ],
     coverImage: 'images/blog/free-list-allocator.jpg',
     videos: [
       { url: 'https://www.youtube.com/watch?v=HPDBOhiKaD8', title: 'The Heap: what does malloc() do? (LiveOverflow)' },
@@ -42,6 +48,12 @@ export const builtInPosts = [
   },
   {
     slug: 'dijkstra-vs-a-star',
+    subtitle: 'Both find a shortest path. One explores by cost so far, the other adds a guess about the goal.',
+    category: 'Algorithms',
+    resources: [
+      { url: 'https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm', title: 'Dijkstra’s algorithm (Wikipedia)' },
+      { url: 'https://en.wikipedia.org/wiki/A*_search_algorithm', title: 'A* search algorithm (Wikipedia)' },
+    ],
     coverImage: 'images/blog/dijkstra-vs-a-star.jpg',
     videos: [
       { url: 'https://www.youtube.com/watch?v=ySN5Wnu88nE', title: 'A* (A Star) Search Algorithm (Computerphile)' },
@@ -70,6 +82,12 @@ export const builtInPosts = [
   },
   {
     slug: 'what-the-database-should-enforce-in-a-role-based-lms',
+    subtitle: 'Why roles, row-level security and server-side scoring belong in the backend, not the browser.',
+    category: 'Security',
+    resources: [
+      { url: 'https://supabase.com/docs/guides/database/postgres/row-level-security', title: 'Row Level Security (Supabase docs)' },
+      { url: 'https://owasp.org/Top10/A01_2021-Broken_Access_Control/', title: 'Broken Access Control (OWASP Top 10)' },
+    ],
     coverImage: 'images/blog/role-based-lms.jpg',
     videos: [
       { url: 'https://www.youtube.com/watch?v=sfzubTrNiiU', title: 'How to create RLS policies in Supabase, step by step' },
@@ -97,6 +115,12 @@ export const builtInPosts = [
   },
   {
     slug: 'building-this-portfolio-static-first-firebase-second',
+    subtitle: 'A page that works without a database, with Firestore, rules and an admin dashboard layered on top.',
+    category: 'Web Development',
+    resources: [
+      { url: 'https://firebase.google.com/docs/firestore/security/get-started', title: 'Get started with Firestore Security Rules (Firebase docs)' },
+      { url: 'https://vite.dev/guide/', title: 'Getting started (Vite docs)' },
+    ],
     coverImage: 'images/blog/static-first-firebase.jpg',
     videos: [
       { url: 'https://www.youtube.com/watch?v=b7PUm7LmAOw', title: 'Firestore Security Rules: how to hack a Firebase app (Fireship)' },
@@ -127,6 +151,13 @@ export const builtInPosts = [
   },
   {
     slug: 'small-browser-apps-without-a-framework',
+    subtitle: 'Plain objects, optional storage, escaped output and accessibility habits from five small apps.',
+    category: 'Web Development',
+    resources: [
+      { url: 'https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage', title: 'Window.localStorage (MDN)' },
+      { url: 'https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog', title: 'The dialog element (MDN)' },
+      { url: 'https://www.w3.org/WAI/fundamentals/accessibility-intro/', title: 'Introduction to web accessibility (W3C WAI)' },
+    ],
     coverImage: 'images/blog/small-browser-apps.jpg',
     videos: [
       { url: 'https://www.youtube.com/watch?v=y51Cv4wnsPw', title: 'Web app tutorial: JavaScript, mobile first, accessibility, persistent data (freeCodeCamp)' },
@@ -156,19 +187,25 @@ export const builtInPosts = [
 <h2>Be honest about demo data</h2>
 <p>These projects use sample content, simulated queues and fictional brands. Saying so on the page, and in the project descriptions, is better than letting a demo pass for a finished product.</p>`,
   },
-].map((post) => ({ authorName: AUTHOR, coverImage: '', videos: [], published: true, createdAt: DATE, ...post }));
+].map((post) => ({
+  authorName: AUTHOR, coverImage: '', subtitle: '', category: '', videos: [], resources: [], published: true, createdAt: DATE, ...post,
+}));
 
 /**
- * Posts seeded into Firestore before thumbnails and video guides existed have neither field. For a post that
- * matches a built-in one by slug, an empty cover or a missing `videos` field falls back to the built-in value.
- * Anything set in the admin dashboard wins (an explicit empty videos list means "no videos").
+ * Posts seeded into Firestore before thumbnails, videos, subtitles, categories and reference links existed lack
+ * those fields. For a post that matches a built-in one by slug, an empty cover/subtitle/category or a missing
+ * `videos`/`resources` list falls back to the built-in value. Anything set in the admin dashboard wins (an
+ * explicit empty list means "none").
  */
-export function withBuiltInMedia(post) {
+export function withBuiltInDefaults(post) {
   const builtIn = builtInPosts.find((p) => p.slug === post.slug);
   if (!builtIn) return post;
   return {
     ...post,
     coverImage: post.coverImage || builtIn.coverImage,
+    subtitle: post.subtitle || builtIn.subtitle,
+    category: post.category || builtIn.category,
     videos: Array.isArray(post.videos) ? post.videos : builtIn.videos,
+    resources: Array.isArray(post.resources) ? post.resources : builtIn.resources,
   };
 }

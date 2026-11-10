@@ -3,7 +3,8 @@
 import { esc, list } from './util.js';
 import { formatDate, readingTime } from '../shared/utils.js';
 import { optimizeImage, imageSrcset } from '../shared/cloudinary.js';
-import { normalizeVideos } from '../shared/media.js';
+import { normalizeVideos, normalizeResources } from '../shared/media.js';
+import { profile, links, about } from '../data/content.js';
 import { postPath, rootPath } from '../shared/seo.js';
 
 /** Picks the thumbnail of a post: its cover image, else the first video that has a thumbnail, else nothing. */
@@ -15,7 +16,7 @@ export function thumbnailOf(post) {
 
 const CARD_WIDTHS = [400, 640, 960];
 
-export const postCard = (post, { eager = false } = {}) => {
+export const postCard = (post, { eager = false, level = 'h2' } = {}) => {
   const thumb = thumbnailOf(post);
   const videos = normalizeVideos(post.videos);
   const img = thumb
@@ -29,13 +30,27 @@ export const postCard = (post, { eager = false } = {}) => {
 <a class="post-card" href="${esc(postPath(post.slug))}">
   <div class="post-card__media">${img}${videos.length ? `<span class="post-card__badge"><span aria-hidden="true">▶</span> ${videos.length === 1 ? 'Video guide' : `${videos.length} video guides`}</span>` : ''}</div>
   <div class="post-card__body">
-    <p class="label post-card__meta">${esc(formatDate(post.createdAt))} · ${post.readingTime || readingTime(post.content)} min read</p>
-    <h2 class="post-card__title">${esc(post.title)}</h2>
+    <p class="label post-card__meta">${post.category ? `<span class="post-card__cat">${esc(post.category)}</span> · ` : ''}${esc(formatDate(post.createdAt))} · ${post.readingTime || readingTime(post.content)} min read</p>
+    <${level} class="post-card__title">${esc(post.title)}</${level}>
     <p class="post-card__excerpt">${esc(post.excerpt || '')}</p>
     <ul class="chips">${list(post.tags || [], (t) => `<li class="chip">${esc(t)}</li>`)}</ul>
   </div>
 </a>`;
 };
+
+/** The three newest posts on the home page: fresh internal links for visitors and search engines. */
+export const latestPostsHtml = (posts) =>
+  posts.length
+    ? `
+<section class="section latest" id="blog" aria-labelledby="latest-title">
+  <div class="container">
+    <p class="label"><span class="section-head__index">(Blog)</span> Writing</p>
+    <h2 class="latest__title" id="latest-title">Latest from the <em>blog</em></h2>
+    <div class="post-grid">${list(posts, (p) => postCard(p, { level: 'h3' }))}</div>
+    <p class="latest__more"><a class="link-arrow" href="/blog/">All posts →</a></p>
+  </div>
+</section>`
+    : '';
 
 /** The blog list page body. `posts` is every published post, newest first. */
 export const blogPageHtml = (posts) => `
@@ -55,13 +70,13 @@ export const blogPageHtml = (posts) => `
 </section>`;
 
 /** "Watch & learn": thumbnail cards that link to YouTube and play inline (privacy-friendly) when JS is on. */
-export function videoGuidesHtml(videos) {
+export function videoGuidesHtml(videos, { title = 'Watch & learn', lead = 'Video guides that explain the same ideas. They open in a new tab, or play right here when you click the thumbnail.' } = {}) {
   const items = normalizeVideos(videos);
   if (!items.length) return '';
   return `
 <section class="container videos" aria-labelledby="videos-title">
-  <h2 id="videos-title" class="related__title">Watch &amp; learn</h2>
-  <p class="videos__lead">Video guides that explain the same ideas. They open in a new tab, or play right here when you click the thumbnail.</p>
+  <h2 id="videos-title" class="related__title">${esc(title)}</h2>
+  <p class="videos__lead">${esc(lead)}</p>
   <ul class="videos__list">${list(items, (v) => `
     <li>
       <a class="video-card" href="${esc(v.href)}" target="_blank" rel="noopener noreferrer" data-video-title="${esc(v.title || 'Video guide')}"${v.embed ? ` data-video-embed="${esc(v.embed)}"` : ''}${v.src ? ` data-video-src="${esc(v.src)}"` : ''}>
@@ -89,6 +104,34 @@ export const shareHtml = (url, title) => {
   </div>`;
 };
 
+/** External references shown as "Further reading". They open in a new tab and say where they go. */
+export function resourcesHtml(resources) {
+  const items = normalizeResources(resources);
+  if (!items.length) return '';
+  return `
+<section class="container resources" aria-labelledby="resources-title">
+  <h2 id="resources-title" class="related__title">Further reading</h2>
+  <ul class="resources__list">${list(items, (r) => `
+    <li><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.title)}<span class="sr-only"> (opens in a new tab)</span></a> <span class="label">${esc(new URL(r.url).hostname.replace(/^www\./, ''))}</span></li>`)}</ul>
+</section>`;
+}
+
+/** Who wrote the post, with real details from the portfolio data. */
+export const authorBoxHtml = (post) => {
+  const name = post.authorName || profile.name;
+  const isOwner = name === profile.name;
+  return `
+<aside class="container author" aria-labelledby="author-title">
+  ${isOwner && profile.portrait ? `<picture><source srcset="/${esc(profile.portrait.replace(/\.(jpe?g|png)$/i, '.webp'))}" type="image/webp"><img class="author__photo" src="/${esc(profile.portrait)}" width="96" height="115" alt="${esc(profile.portraitAlt)}" loading="lazy" decoding="async"></picture>` : ''}
+  <div>
+    <p class="label">Written by</p>
+    <h2 id="author-title" class="author__name">${esc(name)}</h2>
+    ${isOwner ? `<p class="author__bio">${esc(profile.role)} in ${esc(profile.location)}. ${esc(about.lead)}</p>
+    <p class="author__links"><a href="/#about">About me</a> <a href="/#projects">Projects</a> <a href="/#contact">Get in touch</a> ${list(links, (l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener noreferrer me">${esc(l.label)}<span class="sr-only"> (opens in a new tab)</span></a>`)}</p>` : ''}
+  </div>
+</aside>`;
+};
+
 export const relatedHtml = (related) =>
   related.length
     ? `<section class="container related" aria-labelledby="related-title">
@@ -109,11 +152,14 @@ export function articleHtml(post, { url, bodyHtml, related = [], views = null })
     <p class="label"><a href="/blog/">← All posts</a></p>
     <ul class="chips article__tags">${list(post.tags || [], (t) => `<li class="chip">${esc(t)}</li>`)}</ul>
     <h1 class="article__title">${esc(post.title)}</h1>
-    <p class="label article__meta">${esc(post.authorName || 'Muhammad Umer Rizwan')} · ${esc(formatDate(post.createdAt))} · ${minutes} min read${views === null ? '' : ` · <span data-views>${views}</span> views`}</p>
+    ${post.subtitle ? `<p class="article__subtitle">${esc(post.subtitle)}</p>` : ''}
+    <p class="label article__meta">${post.category ? `<a href="/blog/?category=${encodeURIComponent(post.category)}">${esc(post.category)}</a> · ` : ''}${esc(post.authorName || 'Muhammad Umer Rizwan')} · ${esc(formatDate(post.createdAt))} · ${minutes} min read${views === null ? '' : ` · <span data-views>${views}</span> views`}</p>
     ${cover ? `<img class="article__cover" src="${esc(optimizeImage(cover, { width: 1200, height: 630 }))}" width="1200" height="630" alt="${esc(`Thumbnail for ${post.title}`)}" fetchpriority="high" decoding="async">` : ''}
     <div class="prose" data-prose>${bodyHtml}</div>
     ${shareHtml(url, post.title)}
   </article>
   ${videoGuidesHtml(post.videos)}
+  ${resourcesHtml(post.resources)}
+  ${authorBoxHtml(post)}
   ${relatedHtml(related)}`;
 }

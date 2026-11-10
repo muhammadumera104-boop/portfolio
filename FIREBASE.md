@@ -53,10 +53,10 @@ Edit it in three places: `VITE_ADMIN_EMAIL` in `.env`, and the `isAdmin()` funct
 
 | Collection | Important fields |
 | --- | --- |
-| `projects` | `title, slug, category, kind, status, summary, problem, details[], outcome, techStack[], githubUrl, liveUrl, featured, displayOrder` |
+| `projects` | `title, slug, category, kind, status, summary, problem, details[], features[], process, challenges[] ({challenge, solution}), outcome, techStack[], imageUrl, screenshots[] ({url, alt}), demoVideo, githubUrl, liveUrl, featured, displayOrder` |
 | `skills` | `group, level (practiced / learning / exploring), note, items[], displayOrder` |
 | `experiences` | `kind (education / recognition), title, place, period, note, text, displayOrder` |
-| `blog_posts` | `title, slug, excerpt, content (HTML), coverImage (thumbnail), videos[] ({url, title}), tags[], published, authorName, readingTime, views, createdAt` |
+| `blog_posts` | `title, subtitle, slug, excerpt, category, content (HTML), coverImage (thumbnail), videos[] ({url, title}), resources[] ({url, title}), tags[], published, authorName, readingTime, views, createdAt` |
 | `blog_posts/{id}/comments` | `name, content, createdAt` |
 | `contact_messages` | `name, email, subject, message, read, createdAt` (+ `replies[]`, `repliedAt` once you answer) |
 

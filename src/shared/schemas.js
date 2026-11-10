@@ -54,17 +54,49 @@ export const videoSchema = z.preprocess(
   }),
 );
 
+const isHttpsUrl = (value) => {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' && parsed.hostname.includes('.');
+  } catch {
+    return false;
+  }
+};
+
+// An external reference shown under a post as "Further reading": an https link plus a title.
+export const resourceSchema = z.preprocess(
+  (value) => (typeof value === 'string' ? { url: value } : value),
+  z.object({
+    url: z.string().trim().refine(isHttpsUrl, 'Use a full https:// link.'),
+    title: z.string().trim().max(120).default(''),
+  }),
+);
+
 export const postSchema = z.object({
   title: text(3, 140),
+  subtitle: z.string().trim().max(200).default(''),
   slug,
   excerpt: z.string().trim().max(300).default(''),
+  category: z.string().trim().max(40).default(''),
   content: z.string().min(1, 'Write something first.').max(200_000),
   coverImage: url.default(''),
   // Guidance videos shown under the post as "Watch & learn".
   videos: z.array(videoSchema).max(6, 'Add at most 6 videos.').default([]),
+  resources: z.array(resourceSchema).max(8, 'Add at most 8 reference links.').default([]),
   tags: z.array(text(1, 30)).max(8).default([]),
   published: z.boolean().default(false),
   authorName: text(2, 80).default('Muhammad Umer Rizwan'),
+});
+
+// A screenshot needs alt text so screen readers (and search engines) know what it shows.
+export const screenshotSchema = z.object({
+  url: url.refine((v) => v !== '', 'Add the image address.'),
+  alt: text(3, 160, 'Describe the screenshot (alt text), at least 3 characters.'),
+});
+
+export const challengeSchema = z.object({
+  challenge: text(1, 300, 'Describe the challenge.'),
+  solution: text(1, 500, 'Describe how you solved it.'),
 });
 
 export const projectSchema = z.object({
@@ -79,6 +111,15 @@ export const projectSchema = z.object({
   outcome: z.string().trim().max(500).default(''),
   techStack: z.array(text(1, 40)).max(12).default([]),
   imageUrl: url.default(''),
+  screenshots: z.array(screenshotSchema).max(8, 'Add at most 8 screenshots.').default([]),
+  demoVideo: z
+    .string()
+    .trim()
+    .refine((v) => v === '' || videoInfo(v) !== null, 'Use a YouTube, Vimeo or https video link.')
+    .default(''),
+  features: z.array(text(1, 200)).max(12).default([]),
+  process: z.string().trim().max(2000).default(''),
+  challenges: z.array(challengeSchema).max(8, 'Add at most 8 challenges.').default([]),
   liveUrl: url.default(''),
   githubUrl: url.default(''),
   featured: z.boolean().default(false),

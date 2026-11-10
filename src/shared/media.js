@@ -121,3 +121,42 @@ export const formatVideoLines = (videos) =>
     .map((v) => (typeof v === 'string' ? v : v?.title ? `${v.url} | ${v.title}` : v?.url))
     .filter(Boolean)
     .join('\n');
+
+// ── External reference links ("Further reading") ────────────
+/** "URL" or "URL | title" per line -> [{ url, title }], not validated (the form schema reports bad links). */
+export const parseResourceLines = parseVideoLines;
+export const formatResourceLines = formatVideoLines;
+
+/** Keeps only https links, trims titles (falling back to the host name) and drops duplicates. */
+export function normalizeResources(resources) {
+  const seen = new Set();
+  const out = [];
+  for (const entry of Array.isArray(resources) ? resources : []) {
+    const raw = typeof entry === 'string' ? { url: entry } : entry;
+    let url;
+    try {
+      url = new URL(String(raw?.url ?? '').trim());
+    } catch {
+      continue;
+    }
+    if (url.protocol !== 'https:' || seen.has(url.href)) continue;
+    seen.add(url.href);
+    out.push({ url: url.href, title: String(raw?.title ?? '').trim().slice(0, 120) || url.hostname.replace(/^www\./, '') });
+  }
+  return out;
+}
+
+// ── Screenshots and challenge/solution pairs (projects) ─────
+/** "image URL | alt text" per line -> [{ url, alt }]. Not validated here. */
+export function parseScreenshotLines(text) {
+  return parseVideoLines(text).map(({ url, title }) => ({ url, alt: title }));
+}
+export const formatScreenshotLines = (shots) =>
+  (Array.isArray(shots) ? shots : []).map((s) => (typeof s === 'string' ? s : s?.alt ? `${s.url} | ${s.alt}` : s?.url)).filter(Boolean).join('\n');
+
+/** "challenge | solution" per line -> [{ challenge, solution }]. */
+export function parseChallengeLines(text) {
+  return parseVideoLines(text).map(({ url, title }) => ({ challenge: url, solution: title }));
+}
+export const formatChallengeLines = (items) =>
+  (Array.isArray(items) ? items : []).map((c) => `${c.challenge} | ${c.solution}`).join('\n');

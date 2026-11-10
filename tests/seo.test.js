@@ -47,7 +47,9 @@ describe('structured data', () => {
     expect(article.datePublished).toBe('2026-11-07T00:00:00.000Z');
     expect(article.dateModified).toBe('2026-11-08T00:00:00.000Z');
     expect(article.keywords).toContain('Algorithms');
-    expect(article.citation).toHaveLength(2);
+    expect(article.citation).toHaveLength(4); // 2 videos + 2 reference links
+    expect(article.articleSection).toBe('Algorithms');
+    expect(article.alternativeHeadline).toContain('Both find a shortest path');
     expect(crumbs.itemListElement.map((i) => i.name)).toEqual(['Home', 'Blog', post.title]);
     expect(crumbs.itemListElement.map((i) => i.position)).toEqual([1, 2, 3]);
   });

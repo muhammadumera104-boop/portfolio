@@ -1,12 +1,15 @@
-// Contact form: validates with the shared Zod schema, saves the message to Firestore, and falls back to
-// the visitor's email app if saving is not possible (offline, Firebase not configured, rules not deployed).
+// Contact form: validates with the shared Zod schema, saves the message to the Firestore inbox, emails the
+// owner through /api/notify, tells the visitor only what really happened, and falls back to
+// the visitor's email app if neither worked (offline, Firebase not configured, rules not deployed).
 import { profile } from '../data/content.js';
 import { contactSchema, fieldErrors } from '../shared/schemas.js';
 import { toast } from '../shared/toast.js';
+import { describeOutcome, tooFast } from '../shared/contact-flow.js';
 
 export function initContactForm() {
   const form = document.querySelector('[data-contact-form]');
   if (!form) return;
+  const openedAt = Date.now();
   const status = form.querySelector('[data-form-status]');
   const submit = form.querySelector('button[type="submit"]');
   const fields = [...form.querySelectorAll('input[name="name"], input[name="email"], textarea')];
@@ -58,28 +61,64 @@ export function initContactForm() {
       return;
     }
 
+    if (tooFast(openedAt)) {
+      status.textContent = 'That was quick. Please check your message and press send again.';
+      return;
+    }
+
     submit.disabled = true;
+    submit.setAttribute('aria-busy', 'true');
+    form.classList.add('is-sending');
     status.textContent = 'Sending…';
     try {
-      const { sendContactMessage } = await import('../firebase/api.js');
-      await sendContactMessage(result.data);
-      // Best effort: also email a copy to the site owner. The message is already saved, so a failure here is ignored.
-      fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(result.data),
-        keepalive: true,
-      }).catch(() => {});
-      form.reset();
-      status.textContent = 'Thanks — your message has been sent.';
-      toast('Message sent. Thank you!', 'success');
-    } catch (error) {
-      console.error('[contact]', error);
-      status.textContent = `Could not save your message, so I’m opening your email app. You can also write to ${profile.email}.`;
-      toast('Could not send directly — opening your email app.', 'error');
-      openMailClient(result.data);
+      // Save to the inbox and email the owner in parallel; report only what actually happened.
+      const [saved, emailed] = await Promise.all([saveToInbox(result.data), notifyOwner(result.data)]);
+      const outcome = describeOutcome({ saved, emailed }, profile.email);
+      status.textContent = outcome.message;
+      status.dataset.state = outcome.kind;
+      if (outcome.kind === 'failed') {
+        toast(outcome.toast, 'error');
+        openMailClient(result.data);
+      } else {
+        toast(outcome.toast, outcome.kind === 'success' ? 'success' : 'info');
+        form.reset();
+      }
     } finally {
       submit.disabled = false;
+      submit.removeAttribute('aria-busy');
+      form.classList.remove('is-sending');
     }
   });
+}
+
+async function saveToInbox(data) {
+  try {
+    const { sendContactMessage } = await import('../firebase/api.js');
+    await sendContactMessage(data);
+    return true;
+  } catch (error) {
+    console.error('[contact] inbox', error);
+    return false;
+  }
+}
+
+/** True only when the server confirms the email went out (it answers { ok: false } when email is not set up). */
+async function notifyOwner(data) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      signal: controller.signal,
+    });
+    const body = await response.json().catch(() => ({}));
+    return response.ok && body.ok === true;
+  } catch (error) {
+    console.error('[contact] email', error);
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
 }

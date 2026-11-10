@@ -36,6 +36,8 @@ export default defineConfig({
         main: resolve(import.meta.dirname, 'index.html'),
         blog: resolve(import.meta.dirname, 'blog.html'),
         post: resolve(import.meta.dirname, 'post.html'),
+        project: resolve(import.meta.dirname, 'project.html'),
+        notfound: resolve(import.meta.dirname, '404.html'),
         admin: resolve(import.meta.dirname, 'admin.html'),
       },
     },

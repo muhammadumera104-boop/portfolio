@@ -6,7 +6,7 @@ import { cleanPostHtml } from '../shared/sanitize.js';
 import { getPostBySlug, listPublishedPosts, countView, listComments, addComment } from '../firebase/api.js';
 import { firebaseReady } from '../firebase/app.js';
 import { commentSchema, fieldErrors } from '../shared/schemas.js';
-import { builtInPosts, withBuiltInMedia } from '../data/posts.js';
+import { builtInPosts, withBuiltInDefaults } from '../data/posts.js';
 import { formatDate, relatedPosts, makeExcerpt, toDate } from '../shared/utils.js';
 import { postJsonLd, jsonLdText, absoluteUrl, postPath, socialImage, snippet } from '../shared/seo.js';
 import { articleHtml } from '../render/blog.js';
@@ -145,8 +145,8 @@ function renderPost(post, related, comments, live) {
       listPublishedPosts().catch(() => []),
       listComments(live.id).catch(() => []),
     ]);
-    const post = withBuiltInMedia(live);
-    return renderPost(post, relatedPosts(post, all.map(withBuiltInMedia)), comments, true);
+    const post = withBuiltInDefaults(live);
+    return renderPost(post, relatedPosts(post, all.map(withBuiltInDefaults), 3, { fill: true }), comments, true);
   }
 
   const bundled = builtInPosts.find((p) => p.slug === slug);
@@ -157,5 +157,5 @@ function renderPost(post, related, comments, live) {
     return notice('Post not found', 'It may have been unpublished or moved.');
   }
   const post = { ...bundled, id: `built-in:${bundled.slug}`, views: 0 };
-  renderPost(post, relatedPosts(post, builtInPosts.map((p) => ({ ...p, id: `built-in:${p.slug}` }))), [], false);
+  renderPost(post, relatedPosts(post, builtInPosts.map((p) => ({ ...p, id: `built-in:${p.slug}` })), 3, { fill: true }), [], false);
 })();

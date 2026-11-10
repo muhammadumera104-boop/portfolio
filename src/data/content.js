@@ -135,6 +135,13 @@ export const projects = [
 export const webProjects = [
   {
     slug: 'gu-tech-lms',
+    features: [
+      'Admins approve accounts and publish courses',
+      'Teachers run lessons, assignments, grading and server-scored timed quizzes',
+      'Students learn, submit work and chat',
+      'Row-level security on every table and private file storage',
+      '59 automated API tests',
+    ],
     title: 'GU TECH Learning Management System',
     category: 'Full-stack',
     kind: 'React · Node.js · Supabase',
@@ -156,6 +163,14 @@ export const webProjects = [
   },
   {
     slug: 'mediqueue',
+    features: [
+      'Digital tokens with QR codes',
+      'Simulated live queue tracking',
+      'Kiosk in English, Urdu and Sindhi, with voice',
+      'Floor-plan navigator',
+      'Voice-dictated prescriptions linked to pharmacy stock',
+      'Admin dashboard',
+    ],
     title: 'MediQueue — smart hospital queue',
     category: 'Web',
     kind: 'JavaScript · SVG',
@@ -177,6 +192,15 @@ export const webProjects = [
   },
   {
     slug: 'studyspace',
+    features: [
+      'Rich-text notes',
+      'Task list',
+      'Month and week calendar',
+      'Focus timer',
+      'Subjects and a recycle bin',
+      'Global search (Ctrl/⌘ K)',
+      'JSON backup and restore',
+    ],
     title: 'StudySpace — personal learning hub',
     category: 'Web',
     kind: 'HTML · CSS · JavaScript',
@@ -194,6 +218,14 @@ export const webProjects = [
   },
   {
     slug: 'quizora',
+    features: [
+      '36-question bank across six categories and three difficulties',
+      'Timed or untimed play',
+      'Practice and exam modes',
+      'Streak scoring and a daily challenge',
+      'Achievements',
+      'Full answer review',
+    ],
     title: 'Quizora — challenge your mind',
     category: 'Web',
     kind: 'HTML · CSS · JavaScript',
@@ -211,6 +243,13 @@ export const webProjects = [
   },
   {
     slug: 'noir-bean',
+    features: [
+      'Searchable, sortable menu',
+      'Cart drawer',
+      'Validated table-reservation form',
+      'Gallery lightbox',
+      'Review carousel',
+    ],
     title: 'Noir & Bean — café & dining',
     category: 'Web',
     kind: 'HTML · CSS · JavaScript',
@@ -228,6 +267,13 @@ export const webProjects = [
   },
   {
     slug: 'wanderlust',
+    features: [
+      'Destination grid with search, sort, category filters and favourites',
+      'Generated SVG artwork',
+      'Long-form stories',
+      'Schematic world map',
+      'Newsletter form',
+    ],
     title: 'Wanderlust — stories beyond borders',
     category: 'Web',
     kind: 'JavaScript · CSS',
@@ -279,3 +325,14 @@ export const contact = {
     { title: 'Collaborators', text: 'Open to small, learning-focused projects with clear goals and room to practise thoughtful development.' },
   ],
 };
+
+/**
+ * Projects seeded into Firestore before "key features" existed lack that field. For a project that matches a
+ * built-in one by slug, a missing or empty `features` list falls back to the built-in text (taken from the project
+ * description). Anything set in the dashboard wins.
+ */
+export function withBuiltInProjectDefaults(project) {
+  const builtIn = webProjects.find((p) => p.slug === project.slug);
+  if (!builtIn) return project;
+  return { ...project, features: project.features?.length ? project.features : builtIn.features || [] };
+}

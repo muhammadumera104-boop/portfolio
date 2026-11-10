@@ -1,6 +1,6 @@
 // Pure SEO helpers shared by the build (prerendered pages, sitemap) and the browser (dynamic pages).
 import { optimizeImage } from './cloudinary.js';
-import { normalizeVideos } from './media.js';
+import { normalizeVideos, normalizeResources } from './media.js';
 
 export const SITE = {
   name: 'Muhammad Umer Rizwan',
@@ -18,6 +18,9 @@ export function absoluteUrl(siteUrl, path) {
   if (/^https?:\/\//i.test(path)) return path;
   return `${trimSlash(siteUrl)}${path.startsWith('/') ? '' : '/'}${path}`;
 }
+
+/** Site-root path of a project page. */
+export const projectPath = (slug) => `/projects/${encodeURIComponent(slug)}/`;
 
 /** Site-root path of a post page. */
 export const postPath = (slug) => `/blog/${encodeURIComponent(slug)}/`;
@@ -40,7 +43,7 @@ const iso = (value) => {
 export function postJsonLd({ siteUrl, post, description, published, modified }) {
   const url = absoluteUrl(siteUrl, postPath(post.slug));
   const image = post.coverImage ? socialImage(siteUrl, post.coverImage) : undefined;
-  const videoLinks = normalizeVideos(post.videos).map((v) => v.href);
+  const citations = [...normalizeVideos(post.videos).map((v) => v.href), ...normalizeResources(post.resources).map((r) => r.url)];
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -49,6 +52,8 @@ export function postJsonLd({ siteUrl, post, description, published, modified }) 
         '@id': `${url}#post`,
         mainEntityOfPage: { '@type': 'WebPage', '@id': url },
         headline: post.title.slice(0, 110),
+        ...(post.subtitle ? { alternativeHeadline: post.subtitle.slice(0, 110) } : {}),
+        ...(post.category ? { articleSection: post.category } : {}),
         description,
         ...(image ? { image: [image] } : {}),
         datePublished: iso(published),
@@ -57,12 +62,46 @@ export function postJsonLd({ siteUrl, post, description, published, modified }) 
         keywords: (post.tags || []).join(', ') || undefined,
         author: { '@type': 'Person', name: post.authorName || SITE.name, url: absoluteUrl(siteUrl, '/') },
         publisher: { '@type': 'Person', name: SITE.name, url: absoluteUrl(siteUrl, '/') },
-        ...(videoLinks.length ? { citation: videoLinks } : {}),
+        ...(citations.length ? { citation: citations } : {}),
       },
       breadcrumbs(siteUrl, [
         ['Home', '/'],
         ['Blog', '/blog/'],
         [post.title, postPath(post.slug)],
+      ]),
+    ],
+  };
+}
+
+/** schema.org graph for a project page: a software application (or creative work) plus breadcrumbs. */
+export function projectJsonLd({ siteUrl, project, description }) {
+  const url = absoluteUrl(siteUrl, projectPath(project.slug));
+  const live = project.liveUrl ? absoluteUrl(siteUrl, rootPath(project.liveUrl)) : '';
+  const image = project.imageUrl ? socialImage(siteUrl, project.imageUrl) : undefined;
+  const sameAs = [project.githubUrl].filter(Boolean);
+  const shared = {
+    '@id': `${url}#project`,
+    name: project.title,
+    description,
+    url,
+    mainEntityOfPage: url,
+    ...(image ? { image } : {}),
+    inLanguage: 'en',
+    keywords: (project.techStack || []).join(', ') || undefined,
+    author: { '@type': 'Person', name: SITE.name, url: absoluteUrl(siteUrl, '/') },
+    ...(sameAs.length ? { sameAs } : {}),
+  };
+  const main = live
+    ? { '@type': 'SoftwareApplication', ...shared, applicationCategory: 'WebApplication', operatingSystem: 'Any (web browser)', installUrl: live }
+    : { '@type': 'CreativeWork', ...shared };
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      main,
+      breadcrumbs(siteUrl, [
+        ['Home', '/'],
+        ['Projects', '/#projects'],
+        [project.title, projectPath(project.slug)],
       ]),
     ],
   };
@@ -81,7 +120,7 @@ export function breadcrumbs(siteUrl, trail) {
 }
 
 /** schema.org graph for the home page: person + website + profile page. */
-export function homeJsonLd(siteUrl) {
+export function homeJsonLd(siteUrl, { projects = [] } = {}) {
   const home = absoluteUrl(siteUrl, '/');
   return {
     '@context': 'https://schema.org',
@@ -117,6 +156,14 @@ export function homeJsonLd(siteUrl) {
         mainEntity: { '@id': `${home}#person` },
         isPartOf: { '@id': `${home}#website` },
       },
+      ...(projects.length
+        ? [{
+            '@type': 'ItemList',
+            '@id': `${home}#projects`,
+            name: 'Projects',
+            itemListElement: projects.map((p, i) => ({ '@type': 'ListItem', position: i + 1, name: p.name, url: absoluteUrl(siteUrl, p.url) })),
+          }]
+        : []),
     ],
   };
 }
