@@ -135,3 +135,13 @@ describe('resolveSiteUrl', () => {
     expect(resolveSiteUrl({})).toBe('http://localhost:4173');
   });
 });
+
+describe('alternate name', () => {
+  it('Umer Lakhani is in the structured data and shown on the page (About facts), not hidden', async () => {
+    const person = homeJsonLd(SITE)['@graph'][0];
+    expect(person.alternateName).toContain('Umer Lakhani');
+    const { about, profile } = await import('../src/data/content.js');
+    expect(profile.alsoKnownAs).toBe('Umer Lakhani');
+    expect(about.facts.some((f) => f.label === 'Also known as' && f.value === 'Umer Lakhani')).toBe(true);
+  });
+});

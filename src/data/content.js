@@ -8,6 +8,8 @@
 export const profile = {
   name: 'Muhammad Umer Rizwan',
   shortName: 'M. Umer',
+  // Other name the owner is also known by. Shown in About and used in the page title and structured data.
+  alsoKnownAs: 'Umer Lakhani',
   role: 'Computer science student & developer',
   location: 'Karachi, Pakistan',
   email: 'muhammadumera104@gmail.com',
@@ -47,6 +49,7 @@ export const about = {
     'I enjoy breaking complex problems into manageable parts and keeping code readable. Faculty have recognised my sense of responsibility and teamwork, and I care about being dependable and asking good questions.',
   ],
   facts: [
+    { label: 'Also known as', value: 'Umer Lakhani' },
     { label: 'Studying', value: 'BSCS · GU Tech · 2026–2030 (expected)' },
     { label: 'Based in', value: 'Karachi, Pakistan' },
     { label: 'Looking for', value: 'Software engineering & frontend internships' },

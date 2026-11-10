@@ -19,8 +19,8 @@ import { makeExcerpt, newestFirst, relatedPosts, toDate } from '../src/shared/ut
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const HOME = {
-  title: 'Muhammad Umer Rizwan — Computer Science Student & Developer in Karachi',
-  description: 'Muhammad Umer Rizwan (M. Umer): BSCS student at GU Tech, Karachi. Projects in C, C++, Python and the web, plus a blog on programming and algorithms.',
+  title: 'Muhammad Umer Rizwan (Umer Lakhani) — Developer in Karachi',
+  description: 'Muhammad Umer Rizwan, also known as Umer Lakhani: BSCS student at GU Tech, Karachi. Projects in C, C++, Python and the web, and a programming blog.',
 };
 const BLOG = {
   title: 'Blog — Muhammad Umer Rizwan',
