@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+import { seoPlugin } from './build/seo-plugin.js';
 
 // Renders the page body from src/data/content.js into index.html at build time
 // (and on every request in dev), replacing the <!--app--> placeholder.
@@ -24,10 +25,12 @@ function renderContent() {
 }
 
 export default defineConfig({
-  base: './',
-  plugins: [renderContent()],
+  // Absolute asset paths: pages such as /blog/<slug>/ sit in sub-folders and must find /assets/... too.
+  base: '/',
+  plugins: [renderContent(), seoPlugin()],
   build: {
     // Four pages: home (rendered at build time), blog list, single post, admin dashboard.
+    // The SEO plugin then prerenders /blog/ and /blog/<slug>/ from the blog and post pages.
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, 'index.html'),

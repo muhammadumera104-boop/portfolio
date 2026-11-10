@@ -580,3 +580,130 @@ a.filter {
     transform: none;
   }
 }
+
+/* Thumbnails and video guides on the blog */
+.post-card__media {
+  position: relative;
+}
+
+.post-card__badge {
+  position: absolute;
+  inset: auto var(--s-3) var(--s-3) auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.3em 0.7em;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.post-card__badge span {
+  color: var(--vermilion);
+  font-size: 0.7em;
+}
+
+.article__cover {
+  height: auto;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+  background: var(--paper-2);
+}
+
+.videos {
+  max-width: 52rem;
+  margin-top: var(--s-8);
+}
+
+.videos__lead {
+  max-width: var(--measure);
+  margin: 0 0 var(--s-5);
+  color: var(--fg-muted);
+}
+
+.videos__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: var(--s-5);
+  padding: 0;
+  list-style: none;
+}
+
+.video-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  color: inherit;
+  text-decoration: none;
+}
+
+.video-card__thumb {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 100%;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-m);
+  background: var(--ink);
+}
+
+/* Absolutely positioned so the 16:9 box, not the image's own 4:3 size, decides the height. */
+.video-card__thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.video-card:hover .video-card__thumb img,
+.video-card:focus-visible .video-card__thumb img {
+  transform: scale(1.04);
+}
+
+.video-card:focus-visible .video-card__thumb {
+  outline: 3px solid var(--vermilion);
+  outline-offset: 3px;
+}
+
+.video-card__play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: var(--vermilion);
+  color: var(--ink);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.35);
+}
+
+.video-card__play svg {
+  margin-left: 2px;
+}
+
+.video-card__title {
+  margin: 0;
+  font-weight: 600;
+  line-height: var(--lh-snug);
+}
+
+.video-card--playing {
+  grid-column: 1 / -1;
+}
+
+.video-card__frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: var(--radius-m);
+  background: var(--ink);
+}

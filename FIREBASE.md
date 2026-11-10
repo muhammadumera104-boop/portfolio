@@ -8,7 +8,8 @@ The portfolio now talks to Firebase project **portfoliodatabase-96753**:
 | Contact form inbox | Firestore (`contact_messages`) | `src/scripts/contact.js` |
 | Blog, comments, view counter | Firestore (`blog_posts`, `blog_posts/{id}/comments`) | `src/blog/` |
 | Admin dashboard (`/admin.html`) | Auth + Firestore + Storage | `src/admin/`, `src/firebase/admin-api.js` |
-| Blog / editor images | Storage (`blog/`) | `uploadImage()` in `admin-api.js` |
+| Blog / editor images and videos | **Cloudinary** (signed by `/api/cloudinary-sign`), not Firebase Storage | `uploadImage()` / `uploadVideo()` in `admin-api.js` |
+| Email alerts and replies | SMTP via `/api/notify` and `/api/reply` | `api/`, the *Messages* tab |
 
 The static site still works without any of this: if Firebase is unreachable, visitors see the content built from `src/data/content.js`.
 
@@ -22,7 +23,7 @@ Everything below is something only the project owner can switch on.
 
 1. **Firestore** — console → *Build → Firestore Database → Create database* (production mode, pick a region). Until this is done every request fails with *"Cloud Firestore API has not been used in project…"*.
 2. **Authentication** — *Build → Authentication → Get started*, then enable **Google** (recommended) and/or **Email/Password**. Under *Settings → Authorized domains* add the domain you deploy to.
-3. **Storage** (optional, for image uploads) — *Build → Storage → Get started*. New buckets may require the Blaze (pay-as-you-go) plan; without it you can still paste image URLs.
+3. **Storage** — not needed any more. Uploads go to Cloudinary, so you can skip this (and the Blaze plan). `storage.rules` is kept only in case you switch back.
 4. **Rules** — paste `firestore.rules` into *Firestore → Rules → Publish* and `storage.rules` into *Storage → Rules → Publish*. Or, with the CLI:
 
    ```bash
@@ -45,7 +46,8 @@ Edit it in three places: `VITE_ADMIN_EMAIL` in `.env`, and the `isAdmin()` funct
 - Visitors can only: read portfolio content and **published** posts, create contact messages and comments (field-checked by the rules), and add exactly +1 to a post's view counter. Everything else needs the owner account.
 - Public comments store a name and text only — no email — because comments are readable by everyone.
 - There is no server, so there is no rate limiting. If spam appears, turn on **Firebase App Check** and delete comments from the dashboard.
-- Contact messages are not emailed to you automatically. They appear in the dashboard inbox. (Email delivery would need Cloud Functions or the "Trigger Email" extension.)
+- Contact messages appear in the dashboard inbox and are also emailed to you by the `/api/notify` Vercel function (set `SMTP_USER` / `SMTP_PASS`). You can answer from the *Messages* tab; replies go out through `/api/reply`, which only accepts your signed-in owner token.
+- In Google Cloud Console, if the browser API key is restricted to your domains, add your Vercel domain (and any custom domain) to the allowed referrers, and add the same domains under Firebase Authentication → Authorized domains, or the dashboard sign-in will fail.
 
 ## Collections
 
@@ -54,9 +56,9 @@ Edit it in three places: `VITE_ADMIN_EMAIL` in `.env`, and the `isAdmin()` funct
 | `projects` | `title, slug, category, kind, status, summary, problem, details[], outcome, techStack[], githubUrl, liveUrl, featured, displayOrder` |
 | `skills` | `group, level (practiced / learning / exploring), note, items[], displayOrder` |
 | `experiences` | `kind (education / recognition), title, place, period, note, text, displayOrder` |
-| `blog_posts` | `title, slug, excerpt, content (HTML), coverImage, tags[], published, authorName, readingTime, views, createdAt` |
+| `blog_posts` | `title, slug, excerpt, content (HTML), coverImage (thumbnail), videos[] ({url, title}), tags[], published, authorName, readingTime, views, createdAt` |
 | `blog_posts/{id}/comments` | `name, content, createdAt` |
-| `contact_messages` | `name, email, subject, message, read, createdAt` |
+| `contact_messages` | `name, email, subject, message, read, createdAt` (+ `replies[]`, `repliedAt` once you answer) |
 
 The three projects whose slugs are `edutrack`, `algovisualizer` and `allocator` update the matching built-in cards in place (their illustrations stay). Any other project appears under **More work**.
 

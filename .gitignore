@@ -11,3 +11,10 @@ coverage/
 .env
 .claude/
 Umer-Portfolio-Orchestrator-Prompt.pdf
+
+# Video walkthrough output (large, generated)
+walkthrough/
+
+.vercel
+.env.local
+!.env.example

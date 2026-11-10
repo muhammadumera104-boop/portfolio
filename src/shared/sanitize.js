@@ -8,12 +8,13 @@ import DOMPurify from 'dompurify';
 /** https://www.youtube-nocookie.com/embed/<11-character id>[?player options] (or youtube.com/embed) */
 export const YOUTUBE_EMBED = /^https:\/\/www\.youtube(?:-nocookie)?\.com\/embed\/[\w-]{11}(?:\?[\w=&%.-]*)?$/;
 
-let configured = false;
+const configured = new WeakSet();
 
-function configure() {
-  if (configured) return;
-  configured = true;
-  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+// `purify` is DOMPurify bound to a window. The browser uses the default; the build passes one made from jsdom.
+function configure(purify) {
+  if (configured.has(purify)) return;
+  configured.add(purify);
+  purify.addHook('afterSanitizeAttributes', (node) => {
     if (node.tagName === 'A' && node.getAttribute('href')) {
       node.setAttribute('target', '_blank');
       node.setAttribute('rel', 'noopener noreferrer');
@@ -33,9 +34,9 @@ function configure() {
 }
 
 /** Returns safe HTML for a post body. */
-export function cleanPostHtml(html) {
-  configure();
-  return DOMPurify.sanitize(String(html), {
+export function cleanPostHtml(html, purify = DOMPurify) {
+  configure(purify);
+  return purify.sanitize(String(html), {
     USE_PROFILES: { html: true },
     ADD_TAGS: ['iframe'],
     // Posts never need forms, controls or page-level styling; blocking them also rules out fake login boxes.

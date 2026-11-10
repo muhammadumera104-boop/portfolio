@@ -14,6 +14,7 @@ import {
 } from '../shared/schemas.js';
 import { slugify, readingTime, makeExcerpt, formatDate, toDate, parseCsv, parseLines } from '../shared/utils.js';
 import { esc, list } from '../render/util.js';
+import { parseVideoLines, formatVideoLines, thumbnail } from '../shared/media.js';
 
 const root = document.getElementById('admin-root');
 const state = { user: null, tab: 'overview', editor: null };
@@ -180,11 +181,18 @@ function viewPostForm(post = null) {
     <div class="field"><label for="p-excerpt">Excerpt (leave empty to generate one)</label><textarea id="p-excerpt" name="excerpt" rows="2" maxlength="300">${esc(post?.excerpt || '')}</textarea><p class="field__error" data-err="excerpt"></p></div>
     <div class="field"><label for="p-tags">Tags (comma separated)</label><input id="p-tags" name="tags" value="${esc((post?.tags || []).join(', '))}"><p class="field__error" data-err="tags"></p></div>
     <div class="field">
-      <label for="p-cover">Cover image URL</label>
+      <label for="p-cover">Thumbnail (cover image) URL</label>
       <div class="inline"><input id="p-cover" name="coverImage" value="${esc(post?.coverImage || '')}" placeholder="https://… or upload →"><button type="button" class="btn btn--line btn--sm" data-upload-cover>Upload</button></div>
       <input type="file" accept="image/*" hidden data-cover-file>
       <p class="field__error" data-err="coverImage"></p>
-      ${post?.coverImage ? `<img class="cover-preview" src="${esc(post.coverImage)}" alt="Current cover">` : ''}
+      <p class="field__hint">Shown on the blog card and at the top of the post. Use a 1200×630 image. If you leave it empty, the first video's thumbnail is used.</p>
+      ${post?.coverImage ? `<img class="cover-preview" src="${esc(thumbnail(post.coverImage.startsWith('http') ? post.coverImage : `/${post.coverImage}`, { width: 480, height: 252 }))}" alt="Current thumbnail">` : ''}
+    </div>
+    <div class="field">
+      <label for="p-videos">Video guides (one per line: a link, or link | title)</label>
+      <div class="inline"><textarea id="p-videos" name="videos" rows="3" placeholder="https://www.youtube.com/watch?v=… | What this video explains">${esc(formatVideoLines(post?.videos))}</textarea><button type="button" class="btn btn--line btn--sm" data-upload-video>Upload video</button></div>
+      <input type="file" accept="video/*" hidden data-video-file>
+      <p class="field__error" data-err="videos"></p>
     </div>
     <div class="field"><span class="field__label">Content</span><div class="editor" data-editor></div><p class="field__error" data-err="content"></p></div>
     <label class="check"><input type="checkbox" name="published"${post?.published ? ' checked' : ''}> Published (visible on the public blog)</label>
@@ -203,7 +211,7 @@ async function submitPost(form) {
   const content = state.editor.isEmpty() ? '' : state.editor.getHTML();
   const data = {
     title: raw.title, slug: raw.slug || slugify(raw.title), excerpt: raw.excerpt || makeExcerpt(content),
-    content, coverImage: raw.coverImage || '', tags: parseCsv(raw.tags || ''), published: form.elements.published.checked,
+    content, coverImage: raw.coverImage || '', videos: parseVideoLines(raw.videos), tags: parseCsv(raw.tags || ''), published: form.elements.published.checked,
   };
   const result = postSchema.safeParse(data);
   if (!result.success) {
@@ -314,16 +322,31 @@ async function submitCrud(form) {
 // ── messages & comments ─────────────────────────────────────
 async function viewMessages(main) {
   const msgs = (await api.listAll('contact_messages')).sort((a, b) => (toDate(b.createdAt)?.getTime() ?? 0) - (toDate(a.createdAt)?.getTime() ?? 0));
+  state.messages = msgs;
   main.innerHTML = `<header class="admin__head"><h1>Messages</h1></header>
-  ${msgs.length ? `<ul class="rows">${list(msgs, (m) => `<li class="rows__item rows__item--col${m.read ? '' : ' is-unread'}">
-    <div class="msg__top"><strong>${esc(m.name)}</strong> <a href="mailto:${esc(m.email)}">${esc(m.email)}</a> <span class="label">${esc(when(m.createdAt))}</span>${m.read ? '' : ' <span class="pill pill--on">New</span>'}</div>
+  ${msgs.length ? `<ul class="rows">${list(msgs, (m) => `<li class="rows__item rows__item--col${m.read ? '' : ' is-unread'}" data-msg="${esc(m.id)}">
+    <div class="msg__top"><strong>${esc(m.name)}</strong> <a href="mailto:${esc(m.email)}">${esc(m.email)}</a> <span class="label">${esc(when(m.createdAt))}</span>${m.read ? '' : ' <span class="pill pill--on">New</span>'}${m.replies?.length ? ' <span class="pill">Replied</span>' : ''}</div>
     ${m.subject ? `<p class="rows__sub">${esc(m.subject)}</p>` : ''}
     <p class="msg__body">${esc(m.message)}</p>
+    ${list(m.replies || [], (r) => `<blockquote class="msg__reply"><span class="label">You replied ${esc(formatDate(r.sentAt))}</span><br>${esc(r.text)}</blockquote>`)}
     <div class="table__actions">
+      <button type="button" class="link-btn" data-reply-open="${esc(m.id)}">Reply</button>
       <button type="button" class="link-btn" data-read="${esc(m.id)}" data-to="${m.read ? 'unread' : 'read'}">Mark ${m.read ? 'unread' : 'read'}</button>
-      <a class="link-btn" href="mailto:${esc(m.email)}?subject=${encodeURIComponent(`Re: ${m.subject || 'your message'}`)}">Reply</a>
       <button type="button" class="link-btn link-btn--danger" data-delete-msg="${esc(m.id)}">Delete</button>
     </div></li>`)}</ul>` : '<p class="panel">No messages yet.</p>'}`;
+}
+
+function openReplyForm(id) {
+  const item = document.querySelector(`[data-msg="${CSS.escape(id)}"]`);
+  if (!item || item.querySelector('[data-reply-form]')) return item?.querySelector('[data-reply-form] textarea')?.focus();
+  const m = state.messages.find((x) => x.id === id);
+  item.insertAdjacentHTML('beforeend', `
+    <form class="form reply" data-reply-form="${esc(id)}" novalidate>
+      <label for="r-${esc(id)}">Reply to ${esc(m.name)} &lt;${esc(m.email)}&gt;</label>
+      <textarea id="r-${esc(id)}" name="text" rows="5" maxlength="5000" required placeholder="Write your reply. It is sent by email from the site."></textarea>
+      <div class="form__actions"><button class="btn btn--ink btn--sm" type="submit">Send reply</button><button class="btn btn--line btn--sm" type="button" data-reply-cancel>Cancel</button></div>
+    </form>`);
+  item.querySelector('textarea').focus();
 }
 
 async function viewComments(main) {
@@ -373,6 +396,9 @@ root.addEventListener('click', async (event) => {
     await act(() => api.removeDoc(d.deleteItem, d.id), 'Deleted.');
     return go(d.deleteItem);
   }
+  if (d.replyOpen) return openReplyForm(d.replyOpen);
+  if ('replyCancel' in d) return t.closest('[data-reply-form]').remove();
+  if ('uploadVideo' in d) return document.querySelector('[data-video-file]').click();
   if (d.read) {
     await act(() => api.setMessageRead(d.read, d.to === 'read'));
     return go('messages');
@@ -399,6 +425,12 @@ root.addEventListener('submit', async (event) => {
       const { email, password } = Object.fromEntries(new FormData(form));
       const ok = await act(() => api.loginWithEmail(email, password));
       if (ok === undefined) viewLogin('Sign in failed. Check your details and try again.');
+    } else if (form.matches('[data-reply-form]')) {
+      const text = form.elements.text.value.trim();
+      if (text.length < 2) return toast('Write a reply first.', 'error');
+      const message = state.messages.find((m) => m.id === form.dataset.replyForm);
+      const sent = await act(async () => { await api.replyToMessage(message, text); return true; }, 'Reply sent by email.');
+      if (sent) go('messages');
     } else if (form.matches('[data-post-form]')) await submitPost(form);
     else if (form.matches('[data-crud-form]')) await submitCrud(form);
   } finally {
@@ -407,6 +439,19 @@ root.addEventListener('submit', async (event) => {
 });
 
 root.addEventListener('change', async (event) => {
+  if (event.target.matches('[data-video-file]')) {
+    const [video] = event.target.files;
+    event.target.value = '';
+    if (!video) return;
+    toast('Uploading video…', 'info');
+    const link = await act(() => api.uploadVideo(video), 'Video uploaded and added to the list.');
+    if (link) {
+      const box = document.getElementById('p-videos');
+      box.value = [box.value.trim(), `${link} | `].filter(Boolean).join('\n');
+      box.focus(); // the title after the | is optional: type one, or delete the bar
+    }
+    return;
+  }
   if (!event.target.matches('[data-cover-file]')) return;
   const [file] = event.target.files;
   event.target.value = '';

@@ -63,6 +63,13 @@ export function initContactForm() {
     try {
       const { sendContactMessage } = await import('../firebase/api.js');
       await sendContactMessage(result.data);
+      // Best effort: also email a copy to the site owner. The message is already saved, so a failure here is ignored.
+      fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(result.data),
+        keepalive: true,
+      }).catch(() => {});
       form.reset();
       status.textContent = 'Thanks — your message has been sent.';
       toast('Message sent. Thank you!', 'success');

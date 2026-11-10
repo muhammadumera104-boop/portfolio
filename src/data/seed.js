@@ -43,9 +43,9 @@ export function buildSeed() {
       })),
     ],
     // The posts bundled with the site (src/data/posts.js), copied into Firestore so they can be edited there.
-    blog_posts: builtInPosts.map(({ slug, title, excerpt, content, coverImage, tags, published, authorName }) => ({
+    blog_posts: builtInPosts.map(({ slug, title, excerpt, content, coverImage, videos, tags, published, authorName }) => ({
       id: slug,
-      data: { title, slug, excerpt, content, coverImage, tags, published, authorName, readingTime: readingTime(content) },
+      data: { title, slug, excerpt, content, coverImage, videos, tags, published, authorName, readingTime: readingTime(content) },
     })),
   };
 }

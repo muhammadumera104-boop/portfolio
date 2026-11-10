@@ -3,6 +3,9 @@
 // published posts, those take over and these are no longer shown.
 //
 // They are explainers based on the projects on this site. Edit the wording so it sounds like you.
+//
+// coverImage is the post thumbnail (a file in public/images/blog/ or a Cloudinary URL). videos are the
+// "Watch & learn" guides shown under the post and as the card badge; each link was checked to exist.
 
 const AUTHOR = 'Muhammad Umer Rizwan';
 const DATE = '2026-11-07';
@@ -10,6 +13,10 @@ const DATE = '2026-11-07';
 export const builtInPosts = [
   {
     slug: 'how-a-free-list-allocator-works',
+    coverImage: 'images/blog/free-list-allocator.jpg',
+    videos: [
+      { url: 'https://www.youtube.com/watch?v=HPDBOhiKaD8', title: 'The Heap: what does malloc() do? (LiveOverflow)' },
+    ],
     title: 'How a free-list allocator works, and why coalescing matters',
     excerpt: 'What happens behind malloc() and free(): blocks, a free list, splitting, and the merge step that stops memory from fragmenting.',
     tags: ['C', 'Systems', 'Memory'],
@@ -35,6 +42,11 @@ export const builtInPosts = [
   },
   {
     slug: 'dijkstra-vs-a-star',
+    coverImage: 'images/blog/dijkstra-vs-a-star.jpg',
+    videos: [
+      { url: 'https://www.youtube.com/watch?v=ySN5Wnu88nE', title: 'A* (A Star) Search Algorithm (Computerphile)' },
+      { url: 'https://www.youtube.com/watch?v=-L-WgKMFuhE', title: 'A* Pathfinding, algorithm explanation (Sebastian Lague)' },
+    ],
     title: 'Dijkstra vs A*: seeing what a heuristic saves',
     excerpt: 'Both find a shortest path. The difference is how they choose what to explore next, and how much work the guess saves.',
     tags: ['Python', 'Algorithms', 'Graphs'],
@@ -58,6 +70,10 @@ export const builtInPosts = [
   },
   {
     slug: 'what-the-database-should-enforce-in-a-role-based-lms',
+    coverImage: 'images/blog/role-based-lms.jpg',
+    videos: [
+      { url: 'https://www.youtube.com/watch?v=sfzubTrNiiU', title: 'How to create RLS policies in Supabase, step by step' },
+    ],
     title: 'What the database should enforce in a role-based LMS',
     excerpt: 'Lessons from the GU TECH LMS: roles, row-level security, server-scored quizzes and private files, so the browser is never trusted.',
     tags: ['Supabase', 'Security', 'Full-stack'],
@@ -81,6 +97,10 @@ export const builtInPosts = [
   },
   {
     slug: 'building-this-portfolio-static-first-firebase-second',
+    coverImage: 'images/blog/static-first-firebase.jpg',
+    videos: [
+      { url: 'https://www.youtube.com/watch?v=b7PUm7LmAOw', title: 'Firestore Security Rules: how to hack a Firebase app (Fireship)' },
+    ],
     title: 'Building this portfolio: static first, Firebase second',
     excerpt: 'Why the site is rendered from one data file at build time, and how Firestore, rules and an admin dashboard were added on top.',
     tags: ['Web', 'Firebase', 'Vite'],
@@ -107,6 +127,10 @@ export const builtInPosts = [
   },
   {
     slug: 'small-browser-apps-without-a-framework',
+    coverImage: 'images/blog/small-browser-apps.jpg',
+    videos: [
+      { url: 'https://www.youtube.com/watch?v=y51Cv4wnsPw', title: 'Web app tutorial: JavaScript, mobile first, accessibility, persistent data (freeCodeCamp)' },
+    ],
     title: 'Notes on building small browser apps without a framework',
     excerpt: 'What building a quiz app, a study planner, a café site and a hospital queue taught me about state, storage and accessibility.',
     tags: ['JavaScript', 'Web', 'Accessibility'],
@@ -132,4 +156,19 @@ export const builtInPosts = [
 <h2>Be honest about demo data</h2>
 <p>These projects use sample content, simulated queues and fictional brands. Saying so on the page, and in the project descriptions, is better than letting a demo pass for a finished product.</p>`,
   },
-].map((post) => ({ authorName: AUTHOR, coverImage: '', published: true, createdAt: DATE, ...post }));
+].map((post) => ({ authorName: AUTHOR, coverImage: '', videos: [], published: true, createdAt: DATE, ...post }));
+
+/**
+ * Posts seeded into Firestore before thumbnails and video guides existed have neither field. For a post that
+ * matches a built-in one by slug, an empty cover or a missing `videos` field falls back to the built-in value.
+ * Anything set in the admin dashboard wins (an explicit empty videos list means "no videos").
+ */
+export function withBuiltInMedia(post) {
+  const builtIn = builtInPosts.find((p) => p.slug === post.slug);
+  if (!builtIn) return post;
+  return {
+    ...post,
+    coverImage: post.coverImage || builtIn.coverImage,
+    videos: Array.isArray(post.videos) ? post.videos : builtIn.videos,
+  };
+}

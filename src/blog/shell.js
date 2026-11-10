@@ -1,4 +1,6 @@
-// Page frame shared by blog.html and post.html: the same header and footer as the home page.
+// Page frame shared by the blog list and post pages: the same header and footer as the home page.
+// The build prerenders this frame (and the post content) into the HTML so search engines can read it;
+// here we only attach behaviour, or build the frame if the page was opened without prerendering.
 import '@fontsource-variable/dm-sans/opsz.css';
 import '@fontsource/instrument-serif/latin-400-italic.css';
 import '../styles/tokens.css';
@@ -6,17 +8,13 @@ import '../styles/base.css';
 import '../styles/layout.css';
 import '../styles/components.css';
 import '../styles/app.css';
-import { header } from '../render/sections/header.js';
-import { footer } from '../render/sections/closing.js';
+import { shellHtml, BLOG_PATH } from '../render/shell.js';
 import { initTheme } from '../scripts/theme.js';
 import { initNav } from '../scripts/nav.js';
 
-/** Builds the page and returns the <main> element to render into. */
-export function mountShell({ current = '' } = {}) {
-  document.body.insertAdjacentHTML(
-    'afterbegin',
-    `${header('index.html', current)}<main id="main" class="page"></main>${footer('index.html')}`,
-  );
+/** Returns the <main> element to render into. */
+export function mountShell({ current = BLOG_PATH } = {}) {
+  if (!document.getElementById('main')) document.body.insertAdjacentHTML('afterbegin', shellHtml({ current }));
   [initTheme, initNav].forEach((init) => {
     try {
       init();
@@ -28,21 +26,43 @@ export function mountShell({ current = '' } = {}) {
   return document.getElementById('main');
 }
 
-/** Updates <title> and the description / Open Graph tags for the current page. */
-export function setMeta({ title, description, image }) {
+const upsert = (selector, make, attr, value) => {
+  if (!value) return;
+  let el = document.head.querySelector(selector);
+  if (!el) {
+    el = make();
+    document.head.append(el);
+  }
+  el.setAttribute(attr, value);
+};
+const metaName = (name) => () => Object.assign(document.createElement('meta'), { name });
+const metaProp = (property) => () => {
+  const el = document.createElement('meta');
+  el.setAttribute('property', property);
+  return el;
+};
+
+/** Updates <title>, description, canonical, Open Graph and Twitter tags for the current page. */
+export function setMeta({ title, description, image, url, type }) {
   document.title = title;
-  const set = (selector, attr, value, create) => {
-    if (!value) return;
-    let el = document.head.querySelector(selector);
-    if (!el) {
-      el = document.createElement('meta');
-      create(el);
-      document.head.append(el);
-    }
-    el.setAttribute(attr, value);
-  };
-  set('meta[name="description"]', 'content', description, (el) => el.setAttribute('name', 'description'));
-  set('meta[property="og:title"]', 'content', title, (el) => el.setAttribute('property', 'og:title'));
-  set('meta[property="og:description"]', 'content', description, (el) => el.setAttribute('property', 'og:description'));
-  set('meta[property="og:image"]', 'content', image, (el) => el.setAttribute('property', 'og:image'));
+  upsert('meta[name="description"]', metaName('description'), 'content', description);
+  upsert('meta[property="og:title"]', metaProp('og:title'), 'content', title);
+  upsert('meta[property="og:description"]', metaProp('og:description'), 'content', description);
+  upsert('meta[property="og:image"]', metaProp('og:image'), 'content', image);
+  upsert('meta[property="og:url"]', metaProp('og:url'), 'content', url);
+  upsert('meta[property="og:type"]', metaProp('og:type'), 'content', type);
+  upsert('meta[name="twitter:title"]', metaName('twitter:title'), 'content', title);
+  upsert('meta[name="twitter:description"]', metaName('twitter:description'), 'content', description);
+  upsert('meta[name="twitter:image"]', metaName('twitter:image'), 'content', image);
+  upsert('link[rel="canonical"]', () => Object.assign(document.createElement('link'), { rel: 'canonical' }), 'href', url);
+}
+
+/** Replaces the page's JSON-LD with `data` (one script, marked so it can be swapped). */
+export function setJsonLd(json) {
+  document.head.querySelector('script[data-ld="page"]')?.remove();
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.dataset.ld = 'page';
+  script.textContent = json;
+  document.head.append(script);
 }

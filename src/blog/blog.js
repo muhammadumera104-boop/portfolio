@@ -1,33 +1,26 @@
 // Blog listing: search, tag filter and pagination over the published posts in Firestore.
-import { mountShell, setMeta } from './shell.js';
+// The build prerenders every post card into blog/index.html, so the list is crawlable; this script
+// then takes over for live data, search and paging.
+import { mountShell, setMeta, setJsonLd } from './shell.js';
 import { listPublishedPosts } from '../firebase/api.js';
 import { firebaseReady } from '../firebase/app.js';
-import { builtInPosts } from '../data/posts.js';
-import { filterPosts, paginate, formatDate, readingTime, newestFirst } from '../shared/utils.js';
+import { builtInPosts, withBuiltInMedia } from '../data/posts.js';
+import { filterPosts, paginate, newestFirst } from '../shared/utils.js';
+import { blogJsonLd, jsonLdText, absoluteUrl } from '../shared/seo.js';
+import { blogPageHtml, postCard } from '../render/blog.js';
 import { esc, list } from '../render/util.js';
 
 const PER_PAGE = 6;
-const main = mountShell({ current: 'blog.html' });
+const main = mountShell();
+const prerendered = Boolean(main.querySelector('[data-grid][data-prerendered]'));
+if (!prerendered) main.innerHTML = blogPageHtml([]);
+
 setMeta({
   title: 'Blog — Muhammad Umer Rizwan',
-  description: 'Notes on programming, algorithms and learning to build for the web.',
+  description: 'Notes on programming, algorithms and learning to build for the web, with thumbnails and video guides.',
+  url: absoluteUrl(location.origin, '/blog/'),
+  type: 'website',
 });
-
-main.innerHTML = `
-<section class="page-head container">
-  <p class="label"><span class="section-head__index">(Blog)</span> Writing</p>
-  <h1 class="page-head__title">Notes from <em>learning</em> in public.</h1>
-  <p class="page-head__lead">Short write-ups on programming, algorithms and building for the web.</p>
-</section>
-<section class="container blog">
-  <div class="blog-tools">
-    <label class="sr-only" for="blog-search">Search posts</label>
-    <input id="blog-search" class="blog-search" type="search" placeholder="Search posts…" autocomplete="off" maxlength="80">
-    <div class="blog-tags" role="group" aria-label="Filter by tag" data-tags></div>
-  </div>
-  <div class="post-grid" data-grid aria-live="polite"></div>
-  <nav class="pager" aria-label="Pagination" data-pager></nav>
-</section>`;
 
 const grid = main.querySelector('[data-grid]');
 const pager = main.querySelector('[data-pager]');
@@ -40,17 +33,6 @@ search.value = state.q;
 
 const skeleton = () => list([1, 2, 3], () => '<div class="post-card post-card--skeleton skeleton" aria-hidden="true"></div>');
 const message = (title, text) => `<div class="empty"><h2>${esc(title)}</h2><p>${esc(text)}</p></div>`;
-
-const card = (p) => `
-<a class="post-card" href="post.html?slug=${encodeURIComponent(p.slug)}">
-  ${p.coverImage ? `<img class="post-card__img" src="${esc(p.coverImage)}" alt="" loading="lazy" decoding="async">` : '<div class="post-card__img post-card__img--none" aria-hidden="true"></div>'}
-  <div class="post-card__body">
-    <p class="label post-card__meta">${esc(formatDate(p.createdAt))} · ${p.readingTime || readingTime(p.content)} min read</p>
-    <h2 class="post-card__title">${esc(p.title)}</h2>
-    <p class="post-card__excerpt">${esc(p.excerpt || '')}</p>
-    <ul class="chips">${list(p.tags || [], (t) => `<li class="chip">${esc(t)}</li>`)}</ul>
-  </div>
-</a>`;
 
 function sync() {
   const next = new URLSearchParams();
@@ -75,11 +57,12 @@ function render() {
   state.page = view.page;
 
   grid.innerHTML = view.items.length
-    ? list(view.items, card)
+    ? list(view.items, (p, i) => postCard(p, { eager: i === 0 }))
     : message(
         state.posts.length ? 'No matching posts' : 'No posts yet',
         state.posts.length ? 'Try a different search or tag.' : 'Check back soon — the first posts are on their way.',
       );
+  grid.removeAttribute('data-prerendered');
 
   pager.innerHTML =
     view.pages > 1
@@ -117,7 +100,7 @@ pager.addEventListener('click', (event) => {
 // Live posts from Firestore win. If there are none, or the database cannot be reached, the posts
 // bundled with the site (src/data/posts.js) are shown so the blog is never empty.
 (async () => {
-  grid.innerHTML = skeleton();
+  if (!prerendered) grid.innerHTML = skeleton();
   let live = [];
   if (firebaseReady) {
     try {
@@ -126,6 +109,7 @@ pager.addEventListener('click', (event) => {
       console.warn('[blog] using built-in posts:', error.message);
     }
   }
-  state.posts = live.length ? live : [...builtInPosts].sort(newestFirst);
+  state.posts = live.length ? live.map(withBuiltInMedia) : [...builtInPosts].sort(newestFirst);
   render();
+  setJsonLd(jsonLdText(blogJsonLd(location.origin, state.posts)));
 })();

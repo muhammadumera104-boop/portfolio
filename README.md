@@ -4,7 +4,7 @@ Personal portfolio of **Muhammad Umer Rizwan**, BSCS student at GU Tech, Karachi
 
 A static site built with plain HTML, CSS and JavaScript, using [Vite](https://vite.dev) for the dev server and build. All of the content is rendered into the HTML at build time, so the page works and can be indexed without JavaScript.
 
-> **Firebase backend:** the blog, contact inbox, comments and admin dashboard are powered by Firebase. Follow [FIREBASE.md](FIREBASE.md) once to switch it on.
+> **Firebase backend:** the blog, contact inbox, comments and admin dashboard are powered by Firebase. Follow [FIREBASE.md](FIREBASE.md) once to switch it on. Images and videos use Cloudinary, and emails use SMTP: see *Deploy* below.
 
 ## Run it
 
@@ -40,12 +40,39 @@ Checks the JavaScript with ESLint.
 
 ## Deploy
 
-`dist/` is a plain static folder, so any static host works. The build uses relative paths (`base: './'`), so it also works from a sub-folder, such as GitHub Pages.
+The site is built for **Vercel** (static pages in `dist/` plus the serverless functions in `api/`). Pushing to GitHub deploys it, or run `vercel --prod`.
 
-- **Netlify / Vercel / Cloudflare Pages:** build command `npm run build`, output folder `dist`.
-- **GitHub Pages:** run `npm run build` and publish the contents of `dist/` (for example with the `actions/deploy-pages` workflow).
+The build uses absolute paths (`base: '/'`) because pages such as `/blog/<slug>/` live in sub-folders. Serve it from a domain root. GitHub Pages in a sub-folder would need `base` changed, and has no `/api` functions.
 
-After you have a domain, make the share image URL absolute in `index.html` (for example `content="https://your-domain/og-image.png"`). Some social sites ignore relative image URLs. You can also add `<link rel="canonical" href="https://your-domain/">` then.
+### Environment variables (Vercel → Project → Settings → Environment Variables)
+
+| Name | Where it is used | Secret? |
+| --- | --- | --- |
+| `VITE_FIREBASE_*`, `VITE_ADMIN_EMAIL` | blog, contact inbox, admin | no (public by design) |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | image and video uploads from the dashboard | **API secret: yes** |
+| `SMTP_USER`, `SMTP_PASS` | emails: new-message alerts and replies | **password: yes** |
+| `VITE_SITE_URL` (optional) | canonical links, sitemap, share previews; set it when you add a custom domain | no |
+| `VITE_GOOGLE_SITE_VERIFICATION` (optional) | Google Search Console verification tag | no |
+
+Never put secrets in a variable that starts with `VITE_`: those are shipped to every visitor's browser. See `.env.example`.
+
+### Images and videos (Cloudinary)
+
+The dashboard's **Upload** buttons send files straight to Cloudinary. The browser first asks `/api/cloudinary-sign` for a signature, which only works when you are signed in as the owner. The API secret never leaves the server. Cloudinary images are delivered as small WebP/AVIF files automatically.
+
+Each blog post has a **thumbnail** (cover image, or the first video's thumbnail if there is none) and optional **video guides** (YouTube, Vimeo, an uploaded video, or any https `.mp4`/`.webm`). They show as a "Watch & learn" section under the post and as a badge on the blog card. Videos only load from YouTube or Vimeo after a visitor presses play.
+
+### Email
+
+- A visitor's message is saved to the inbox and **emailed to you** (`/api/notify`). Hit reply in Gmail to answer directly, or use the **Reply** button in the dashboard's *Messages* tab.
+- Dashboard replies are sent from your address over SMTP (`/api/reply`, owner only) with Reply-To set to you, and the thread is kept on the message.
+- Gmail needs an **app password** (Google Account → Security → 2-Step Verification → App passwords), not your normal password.
+
+### Search engines (SEO)
+
+Every deploy prerenders the home page, `/blog/` and each published post to plain HTML (so crawlers need no JavaScript) with titles, descriptions, canonical URLs, Open Graph/Twitter tags and schema.org data, and generates `sitemap.xml` and `robots.txt`. Published posts are read from Firestore **at build time**, so a post you publish in the dashboard appears in the sitemap and gets its prerendered page after the next deploy. Until then it still works through the live page. Redeploy after publishing (push any commit, or *Redeploy* in Vercel).
+
+No site can be guaranteed a top Google ranking. What helps most: submit the sitemap in [Google Search Console](https://search.google.com/search-console), use your own domain, publish posts regularly, and link to the site from your GitHub and LinkedIn profiles.
 
 ## Project structure
 
@@ -127,5 +154,6 @@ Magic UI, Smooth UI, Unlumen UI and RetroUI were considered. All four are React 
 
 ## Notes
 
-- The contact form has no server. It validates the message and opens the visitor's email app with it filled in. Nothing is sent until they press send there.
+- The contact form validates the message, saves it to the Firestore inbox and emails a copy to the owner. If saving fails it falls back to opening the visitor's email app with the message filled in.
+- `npm run dev` serves the pages only. To run the `/api` functions locally (uploads, email) use `vercel dev`.
 - The pathfinder and heap demos are JavaScript sketches written for this page. Their captions say so: the original projects are in Python and C.

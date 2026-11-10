@@ -23,6 +23,8 @@
     "dompurify": "^3.4.17",
     "firebase": "^13.2.0",
     "gsap": "^3.15.0",
+    "jose": "^6.2.17",
+    "nodemailer": "^10.4.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -32,5 +34,8 @@
     "jsdom": "^31.0.0",
     "vite": "^8.3.4",
     "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

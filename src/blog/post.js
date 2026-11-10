@@ -1,24 +1,27 @@
-// Single post page: content, share buttons, related posts and comments.
-import { mountShell, setMeta } from './shell.js';
+// Single post page: content, video guides, share buttons, related posts and comments.
+// The build prerenders each post into /blog/<slug>/index.html for search engines. This script then
+// loads the live version (views, comments, edits made since the last deploy) and attaches behaviour.
+import { mountShell, setMeta, setJsonLd } from './shell.js';
 import { cleanPostHtml } from '../shared/sanitize.js';
 import { getPostBySlug, listPublishedPosts, countView, listComments, addComment } from '../firebase/api.js';
 import { firebaseReady } from '../firebase/app.js';
 import { commentSchema, fieldErrors } from '../shared/schemas.js';
-import { builtInPosts } from '../data/posts.js';
-import { formatDate, readingTime, relatedPosts, makeExcerpt, toDate } from '../shared/utils.js';
+import { builtInPosts, withBuiltInMedia } from '../data/posts.js';
+import { formatDate, relatedPosts, makeExcerpt, toDate } from '../shared/utils.js';
+import { postJsonLd, jsonLdText, absoluteUrl, postPath, socialImage, snippet } from '../shared/seo.js';
+import { articleHtml } from '../render/blog.js';
 import { toast } from '../shared/toast.js';
+import { enhanceVideos } from './videos.js';
 import { esc, list } from '../render/util.js';
 
-const main = mountShell({ current: 'blog.html' });
-const slug = new URLSearchParams(location.search).get('slug') || '';
+const main = mountShell();
 
-// Post HTML is written by the site owner in the admin editor, but it is sanitised anyway
-// (src/shared/sanitize.js): ordinary formatting plus YouTube embeds, nothing else.
-const clean = cleanPostHtml;
+/** /blog/<slug>/ (clean URL) or the older post.html?slug=<slug>. */
+const slug = decodeURIComponent(location.pathname.match(/^\/blog\/([^/]+)\/?$/)?.[1] || new URLSearchParams(location.search).get('slug') || '');
 
 const notice = (title, text) => {
   main.innerHTML = `<section class="container page-head"><h1 class="page-head__title">${esc(title)}</h1>
-    <p class="page-head__lead">${esc(text)}</p><p><a class="link-arrow" href="blog.html">Back to the blog</a></p></section>`;
+    <p class="page-head__lead">${esc(text)}</p><p><a class="link-arrow" href="/blog/">Back to the blog</a></p></section>`;
 };
 
 const commentHtml = (c) => `
@@ -27,58 +30,13 @@ const commentHtml = (c) => `
   <p class="comment__text">${esc(c.content)}</p>
 </li>`;
 
-function shareLinks(url, title) {
-  const u = encodeURIComponent(url);
-  const t = encodeURIComponent(title);
-  return `
-  <div class="share" aria-label="Share this post">
-    <span class="label">Share</span>
-    <button type="button" class="filter" data-copy>Copy link</button>
-    <a class="filter" href="https://twitter.com/intent/tweet?url=${u}&text=${t}" target="_blank" rel="noopener noreferrer">X</a>
-    <a class="filter" href="https://www.linkedin.com/sharing/share-offsite/?url=${u}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-    <a class="filter" href="https://wa.me/?text=${t}%20${u}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-  </div>`;
-}
-
-function renderPost(post, related, comments, live) {
-  const url = location.href.split('#')[0];
-  const minutes = post.readingTime || readingTime(post.content);
-  const description = post.excerpt || makeExcerpt(post.content);
-  setMeta({ title: `${post.title} — Muhammad Umer Rizwan`, description, image: post.coverImage });
-
-  const ld = document.createElement('script');
-  ld.type = 'application/ld+json';
-  ld.textContent = JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    description,
-    author: { '@type': 'Person', name: post.authorName || 'Muhammad Umer Rizwan' },
-    datePublished: (toDate(post.createdAt) || new Date()).toISOString(),
-    ...(post.coverImage ? { image: post.coverImage } : {}),
-  });
-  document.head.append(ld);
-
-  main.innerHTML = `
-  <article class="container article">
-    <p class="label"><a href="blog.html">← All posts</a></p>
-    <ul class="chips article__tags">${list(post.tags || [], (t) => `<li class="chip">${esc(t)}</li>`)}</ul>
-    <h1 class="article__title">${esc(post.title)}</h1>
-    <p class="label article__meta">${esc(post.authorName || 'Muhammad Umer Rizwan')} · ${esc(formatDate(post.createdAt))} · ${minutes} min read${live ? ` · <span data-views>${post.views || 0}</span> views` : ''}</p>
-    ${post.coverImage ? `<img class="article__cover" src="${esc(post.coverImage)}" alt="" decoding="async">` : ''}
-    <div class="prose" data-prose></div>
-    ${shareLinks(url, post.title)}
-  </article>
-
-  ${related.length ? `<section class="container related" aria-labelledby="related-title">
-    <h2 id="related-title" class="related__title">Related posts</h2>
-    <ul class="related__list">${list(related, (p) => `<li><a href="post.html?slug=${encodeURIComponent(p.slug)}">${esc(p.title)}</a><span class="label">${esc(formatDate(p.createdAt))}</span></li>`)}</ul>
-  </section>` : ''}
-
-  ${!live ? `<section class="container comments" aria-labelledby="comments-title">
+const commentsSection = (comments, live) =>
+  !live
+    ? `<section class="container comments" aria-labelledby="comments-title">
     <h2 id="comments-title" class="related__title">Comments</h2>
     <p class="comments__empty">Comments open once this post is published from the admin dashboard.</p>
-  </section>` : `<section class="container comments" aria-labelledby="comments-title">
+  </section>`
+    : `<section class="container comments" aria-labelledby="comments-title">
     <h2 id="comments-title" class="related__title">Comments <span class="label" data-count>${comments.length}</span></h2>
     <ul class="comments__list" data-comments>${comments.length ? list(comments, commentHtml) : ''}</ul>
     <p class="comments__empty" data-empty${comments.length ? ' hidden' : ''}>No comments yet. Be the first.</p>
@@ -90,9 +48,25 @@ function renderPost(post, related, comments, live) {
       <button class="btn btn--ink" type="submit">Post comment</button>
       <p class="contact-form__status" data-status role="status" aria-live="polite"></p>
     </form>
-  </section>`}`;
+  </section>`;
 
-  main.querySelector('[data-prose]').innerHTML = clean(post.content);
+function renderPost(post, related, comments, live) {
+  const origin = location.origin;
+  const url = absoluteUrl(origin, postPath(post.slug));
+  const description = post.excerpt || makeExcerpt(post.content);
+  setMeta({
+    title: `${post.title} — Muhammad Umer Rizwan`,
+    description: snippet(description),
+    image: post.coverImage ? socialImage(origin, post.coverImage) : undefined,
+    url,
+    type: 'article',
+  });
+  setJsonLd(jsonLdText(postJsonLd({ siteUrl: origin, post, description: snippet(description), published: toDate(post.createdAt), modified: toDate(post.updatedAt) })));
+
+  // Post HTML is written by the site owner in the admin editor, but it is sanitised anyway
+  // (src/shared/sanitize.js): ordinary formatting plus YouTube embeds, nothing else.
+  main.innerHTML = articleHtml(post, { url, bodyHtml: cleanPostHtml(post.content), related, views: live ? post.views || 0 : null }) + commentsSection(comments, live);
+  enhanceVideos(main);
 
   main.querySelector('[data-copy]').addEventListener('click', async () => {
     try {
@@ -149,14 +123,19 @@ function renderPost(post, related, comments, live) {
 
 (async () => {
   if (!slug) return notice('No post selected', 'Open a post from the blog list.');
-  main.innerHTML = '<div class="container article"><div class="skeleton skeleton--title"></div><div class="skeleton skeleton--text"></div><div class="skeleton skeleton--text"></div></div>';
+  const prerendered = main.querySelector('article.article');
+  if (!prerendered) {
+    main.innerHTML = '<div class="container article"><div class="skeleton skeleton--title"></div><div class="skeleton skeleton--text"></div><div class="skeleton skeleton--text"></div></div>';
+  }
 
   // Live post from Firestore first; otherwise the post bundled with the site (no comments or view counter).
   let live = null;
+  let databaseDown = !firebaseReady;
   if (firebaseReady) {
     try {
       live = await getPostBySlug(slug);
     } catch (error) {
+      databaseDown = true;
       console.warn('[post] database unavailable, trying built-in posts:', error.message);
     }
   }
@@ -166,11 +145,17 @@ function renderPost(post, related, comments, live) {
       listPublishedPosts().catch(() => []),
       listComments(live.id).catch(() => []),
     ]);
-    return renderPost(live, relatedPosts(live, all), comments, true);
+    const post = withBuiltInMedia(live);
+    return renderPost(post, relatedPosts(post, all.map(withBuiltInMedia)), comments, true);
   }
 
   const bundled = builtInPosts.find((p) => p.slug === slug);
-  if (!bundled) return notice('Post not found', 'It may have been unpublished or moved.');
+  if (!bundled) {
+    // Keep the prerendered copy only when the database could not be asked; if it answered "no such post",
+    // the post was unpublished or deleted since the last deploy.
+    if (prerendered && databaseDown) return enhanceVideos(main);
+    return notice('Post not found', 'It may have been unpublished or moved.');
+  }
   const post = { ...bundled, id: `built-in:${bundled.slug}`, views: 0 };
   renderPost(post, relatedPosts(post, builtInPosts.map((p) => ({ ...p, id: `built-in:${p.slug}` }))), [], false);
 })();

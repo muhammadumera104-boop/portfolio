@@ -1,16 +1,17 @@
-// Admin-only Firebase access: Auth, full CRUD, uploads and seeding. Loaded only by admin.html.
-// Real authorisation is enforced by firestore.rules / storage.rules; the checks here are for UX.
+// Admin-only Firebase access: Auth, full CRUD, uploads, email replies and seeding. Loaded only by admin.html.
+// Real authorisation is enforced by firestore.rules and by the Vercel functions (they verify the login
+// token); the checks here are for UX.
 import {
   getFirestore, collection, collectionGroup, doc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
-  writeBatch, serverTimestamp,
+  writeBatch, serverTimestamp, arrayUnion,
 } from 'firebase/firestore';
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider,
   signOut, sendEmailVerification,
 } from 'firebase/auth';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { app, firebaseReady, adminEmail } from './app.js';
 import { buildSeed } from '../data/seed.js';
+import { uploadToCloudinary } from '../shared/cloudinary.js';
 
 const db = () => getFirestore(app);
 const auth = () => getAuth(app);
@@ -51,22 +52,62 @@ export const savePost = (id, data) =>
   saveDoc('blog_posts', id, id ? data : { ...data, views: 0 });
 export const setPublished = (id, published) => updateDoc(doc(db(), 'blog_posts', id), { published, updatedAt: serverTimestamp() });
 
+// ── Server calls (Vercel functions in /api) ─────────────────
+// These need the owner's login: the function verifies the Firebase ID token before doing anything.
+async function callApi(path, body) {
+  const user = auth().currentUser;
+  if (!user) throw new Error('Please sign in again.');
+  let response;
+  try {
+    response = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await user.getIdToken()}` },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error('Could not reach the server. When running locally, start it with "vercel dev" so the /api functions exist.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `The server answered ${response.status}.`);
+  return data;
+}
+
 // ── Messages & comments ─────────────────────────────────────
 export const setMessageRead = (id, read) => updateDoc(doc(db(), 'contact_messages', id), { read });
+
+/** Emails a reply to the visitor, then records it on the message so the thread stays visible in the dashboard. */
+export async function replyToMessage(message, text) {
+  await callApi('/api/reply', {
+    to: message.email,
+    name: message.name,
+    subject: message.subject,
+    message: text,
+    original: message.message,
+  });
+  await updateDoc(doc(db(), 'contact_messages', message.id), {
+    read: true,
+    repliedAt: serverTimestamp(),
+    replies: arrayUnion({ text, sentAt: new Date().toISOString() }),
+  });
+}
+
 export const listComments = async () => rows(await getDocs(collectionGroup(db(), 'comments')));
 export const removeComment = (path) => deleteDoc(doc(db(), path));
 
-// ── Uploads (Firebase Storage) ──────────────────────────────
-const MAX_UPLOAD = 5 * 1024 * 1024;
+// ── Uploads (Cloudinary, signed by /api/cloudinary-sign) ────
+const LIMITS = { image: 8 * 1024 * 1024, video: 100 * 1024 * 1024 };
 
-export async function uploadImage(file, folder = 'blog') {
-  if (!file.type.startsWith('image/')) throw new Error('Only image files can be uploaded.');
-  if (file.size > MAX_UPLOAD) throw new Error('Images must be 5 MB or smaller.');
-  const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-');
-  const path = `${folder}/${Date.now()}-${safe}`;
-  const snapshot = await uploadBytes(ref(getStorage(app), path), file, { contentType: file.type });
-  return getDownloadURL(snapshot.ref);
+async function upload(file, resourceType, folder) {
+  if (!file.type.startsWith(`${resourceType}/`)) throw new Error(`Only ${resourceType} files can be uploaded here.`);
+  if (file.size > LIMITS[resourceType]) throw new Error(`${resourceType === 'image' ? 'Images' : 'Videos'} must be ${LIMITS[resourceType] / 1024 / 1024} MB or smaller.`);
+  const signed = await callApi('/api/cloudinary-sign', { folder: `portfolio/${folder}` });
+  return uploadToCloudinary(file, signed, resourceType);
 }
+
+/** Uploads an image to Cloudinary and returns its https URL. */
+export const uploadImage = (file, folder = 'blog') => upload(file, 'image', folder);
+/** Uploads a video to Cloudinary and returns its https URL. */
+export const uploadVideo = (file, folder = 'videos') => upload(file, 'video', folder);
 
 // ── Seeding ─────────────────────────────────────────────────
 /** Writes the portfolio content from content.js. Existing docs with the same id are overwritten. */

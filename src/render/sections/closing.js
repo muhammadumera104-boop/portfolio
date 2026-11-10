@@ -79,7 +79,7 @@ export const contactSection = () => `
     </div>
     <form class="contact-form" data-contact-form novalidate>
       <h3 class="contact-form__title">Write a message</h3>
-      <p class="contact-form__note">Your message is saved to my inbox. If saving fails, the form falls back to opening your email app.</p>
+      <p class="contact-form__note">Your message goes straight to my inbox and I reply by email. If sending fails, the form falls back to opening your email app.</p>
       <div class="field">
         <label for="c-name">Your name</label>
         <input id="c-name" name="name" autocomplete="name" minlength="2" maxlength="80" required>

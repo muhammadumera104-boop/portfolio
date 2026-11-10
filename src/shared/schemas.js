@@ -1,6 +1,7 @@
 // Zod schemas. The same rules validate forms in the browser; firestore.rules repeats the
 // important limits on the server, so a hand-made request cannot skip them.
 import { z } from 'zod';
+import { videoInfo } from './media.js';
 
 const text = (min, max, message) =>
   z
@@ -40,12 +41,27 @@ export const commentSchema = z.object({
   content: text(2, 1000, 'Please write a comment.'),
 });
 
+// A video guide on a post: a YouTube, Vimeo, Cloudinary or https video-file link plus an optional short title.
+// A bare string (older data) is read as { url }.
+export const videoSchema = z.preprocess(
+  (value) => (typeof value === 'string' ? { url: value } : value),
+  z.object({
+    url: z
+      .string()
+      .trim()
+      .refine((v) => videoInfo(v) !== null, 'Use a YouTube, Vimeo or https video link.'),
+    title: z.string().trim().max(120).default(''),
+  }),
+);
+
 export const postSchema = z.object({
   title: text(3, 140),
   slug,
   excerpt: z.string().trim().max(300).default(''),
   content: z.string().min(1, 'Write something first.').max(200_000),
   coverImage: url.default(''),
+  // Guidance videos shown under the post as "Watch & learn".
+  videos: z.array(videoSchema).max(6, 'Add at most 6 videos.').default([]),
   tags: z.array(text(1, 30)).max(8).default([]),
   published: z.boolean().default(false),
   authorName: text(2, 80).default('Muhammad Umer Rizwan'),

@@ -408,3 +408,32 @@
     padding: var(--s-5) var(--s-4) var(--s-7);
   }
 }
+
+/* Replies in the Messages tab */
+.msg__reply {
+  margin: var(--s-3) 0 0;
+  padding: var(--s-3) var(--s-4);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-raised);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.reply {
+  width: 100%;
+  margin-top: var(--s-4);
+}
+
+.reply textarea {
+  width: 100%;
+}
+
+.form .inline textarea {
+  flex: 1;
+}
+
+.field__hint {
+  margin: var(--s-1) 0 0;
+  color: var(--fg-muted);
+  font-size: 0.875rem;
+}
