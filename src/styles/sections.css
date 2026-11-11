@@ -364,17 +364,29 @@
   align-items: start;
 }
 
+/* The copy column is its own 7-column grid, on the same gutters as the page grid: the photo takes the first three
+   columns and the lead and text sit beside it, so the photo lines up with the grid instead of floating alone. */
 .about__copy {
   grid-column: 1 / 8;
   display: grid;
-  gap: var(--s-6);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--s-6) var(--s-5);
+  align-items: start;
 }
 
 .about__portrait {
-  width: min(100%, 22rem);
+  grid-column: 1 / 4;
+  grid-row: 1 / span 2;
+  width: 100%;
   margin: 0;
   display: grid;
   gap: var(--s-3);
+}
+
+/* The vermilion frame is offset 12px, so keep the photo clear of the column to its right. */
+.about__portrait-frame {
+  margin-right: 12px;
+  margin-bottom: 12px;
 }
 
 /* Photo sits in a thin offset frame, like a mounted print. */
@@ -422,6 +434,8 @@
 }
 
 .about__lead {
+  grid-column: 4 / -1;
+  grid-row: 1;
   max-width: 22ch;
   font-size: var(--fs-lead);
   font-weight: 520;
@@ -430,9 +444,11 @@
 }
 
 .about__text {
+  grid-column: 4 / -1;
+  grid-row: 2;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s-5);
+  grid-template-columns: 1fr;
+  gap: var(--s-4);
 }
 
 .about__text p {
@@ -440,6 +456,7 @@
 }
 
 .facts {
+  grid-column: 1 / -1;
   border-top: 1px solid var(--fg);
 }
 
@@ -485,8 +502,20 @@
 }
 
 @media (max-width: 640px) {
-  .about__text {
-    grid-template-columns: 1fr;
+  .about__copy {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .about__portrait,
+  .about__lead,
+  .about__text,
+  .facts {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .about__portrait {
+    width: min(100%, 18rem);
   }
 
   .facts__row {
