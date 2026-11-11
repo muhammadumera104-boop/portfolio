@@ -72,7 +72,7 @@ describe('projectSchema / skillSchema / experienceSchema', () => {
     expect(ok(skillSchema, { group: 'Programming', level: 'practiced', items: ['C'] }).success).toBe(true);
   });
   it('only allows the two experience kinds', () => {
-    const base = { title: 'BSCS', place: 'GU Tech' };
+    const base = { title: 'BSCS', place: 'GU TECH' };
     expect(ok(experienceSchema, { ...base, kind: 'education' }).success).toBe(true);
     expect(ok(experienceSchema, { ...base, kind: 'job' }).success).toBe(false);
   });

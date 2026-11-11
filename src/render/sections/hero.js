@@ -36,7 +36,7 @@ export const hero = () => `
   <div class="container hero__inner">
     <div class="hero__meta" data-hero-fade>
       <p class="label">Student portfolio</p>
-      <p class="label">BSCS · GU Tech</p>
+      <p class="label">BSCS · GU TECH</p>
       <p class="label">${esc(profile.location)}</p>
       <p class="label hero__status"><span class="status-dot" aria-hidden="true"></span>Open to internships</p>
     </div>

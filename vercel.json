@@ -4,29 +4,68 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/blog.html", "destination": "/blog/", "permanent": true },
+    {
+      "source": "/blog.html",
+      "destination": "/blog/",
+      "permanent": true
+    },
     {
       "source": "/post.html",
-      "has": [{ "type": "query", "key": "slug", "value": "(?<slug>[a-z0-9-]+)" }],
+      "has": [
+        {
+          "type": "query",
+          "key": "slug",
+          "value": "(?<slug>[a-z0-9-]+)"
+        }
+      ],
       "destination": "/blog/:slug/",
       "permanent": true
     },
-    { "source": "/post.html", "destination": "/blog/", "permanent": false },
-    { "source": "/project.html", "destination": "/#projects", "permanent": false }
+    {
+      "source": "/post.html",
+      "destination": "/blog/",
+      "permanent": false
+    },
+    {
+      "source": "/project.html",
+      "destination": "/#projects",
+      "permanent": false
+    }
   ],
   "rewrites": [
-    { "source": "/blog/:slug", "destination": "/post.html" },
-    { "source": "/projects/:slug", "destination": "/project.html" }
+    {
+      "source": "/blog/:slug",
+      "destination": "/post.html"
+    },
+    {
+      "source": "/projects/:slug",
+      "destination": "/project.html"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000" },
-        { "key": "Permissions-Policy", "value": "camera=(), geolocation=(), payment=()" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), geolocation=(), payment=()"
+        }
       ]
     },
     {
@@ -41,18 +80,50 @@
     {
       "source": "/admin.html",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
-        { "key": "Cache-Control", "value": "no-store" },
-        { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'" }
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+        }
       ]
     },
     {
       "source": "/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/images/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/videos/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, stale-while-revalidate=86400"
+        },
+        {
+          "key": "Accept-Ranges",
+          "value": "bytes"
+        }
+      ]
     }
   ]
 }

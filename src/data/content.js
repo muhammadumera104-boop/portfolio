@@ -30,6 +30,7 @@ export const links = [
 export const nav = [
   { label: 'About', href: '#about' },
   { label: 'Skills', href: '#skills' },
+  { label: 'Journey', href: '#journey' },
   { label: 'Projects', href: '#projects' },
   { label: 'Education', href: '#education' },
   { label: 'Blog', href: '/blog/' },
@@ -47,12 +48,12 @@ export const foundations = [
 export const about = {
   lead: 'I like to understand why a solution works — not only that it does.',
   paragraphs: [
-    'I’m studying for a BSCS at GU Tech in Karachi. My programming journey began with C, continued with C++ and object-oriented programming, and grew through independent Python learning. I’m now learning HTML, CSS, and JavaScript to bring those foundations to the web.',
+    'I’m studying for a BSCS at GU TECH in Karachi. My programming journey began with C, continued with C++ and object-oriented programming, and grew through independent Python learning. I’m now learning HTML, CSS, and JavaScript to bring those foundations to the web.',
     'I enjoy breaking complex problems into manageable parts and keeping code readable. Faculty have recognised my sense of responsibility and teamwork, and I care about being dependable and asking good questions.',
   ],
   facts: [
     { label: 'Also known as', value: 'Umer Lakhani' },
-    { label: 'Studying', value: 'BSCS · GU Tech · 2026–2030 (expected)' },
+    { label: 'Studying', value: 'BSCS · GU TECH · 2026–2030 (expected)' },
     { label: 'Based in', value: 'Karachi, Pakistan' },
     { label: 'Looking for', value: 'Software engineering & frontend internships' },
     { label: 'Exploring', value: 'Full-stack, automation, AI agents, 3D modelling' },
@@ -296,6 +297,122 @@ export const webProjects = [
   },
 ];
 
+// Repositories shown as picture cards in "Find me online". Clicking a card opens the repository on GitHub. The text
+// is taken from each repository's own README, so nothing here is invented; the pictures are in public/images/repos/.
+export const featuredRepos = [
+  {
+    name: 'university-portal',
+    title: 'GU TECH Learning Management System',
+    url: 'https://github.com/muhammadumera104-boop/university-portal',
+    image: 'images/repos/university-portal.webp',
+    alt: 'Screenshot of the GU TECH Learning Management System sign-up page',
+    language: 'JavaScript',
+    text: 'A responsive internal LMS built with React, Vite, Node.js, Express and Supabase. Authenticated operations run through a server API, and PostgreSQL row-level security protects the data.',
+    tags: ['React', 'Node.js', 'Supabase'],
+  },
+  {
+    name: 'digital-well-being',
+    title: 'MindBridge',
+    url: 'https://github.com/muhammadumera104-boop/digital-well-being',
+    image: 'images/repos/mindbridge.webp',
+    alt: 'MindBridge, a private phone companion for students',
+    language: 'HTML',
+    text: 'A private phone companion for students: decide before you open the phone, get a warning before time is up, wind down at night, and always know where a real person is.',
+    tags: ['HTML', 'PWA', 'Tests'],
+  },
+  {
+    name: 'portfolio',
+    title: 'This portfolio',
+    url: 'https://github.com/muhammadumera104-boop/portfolio',
+    image: 'images/repos/portfolio.webp',
+    alt: 'The share image of this portfolio website',
+    language: 'JavaScript',
+    text: 'The source of this website: a fast static site with a Firebase blog, an admin dashboard, email replies and search-engine prerendering.',
+    tags: ['Vite', 'Firebase', 'Vercel'],
+  },
+];
+
+// The introduction video shown near the top of the home page. `src` is the video file; leave it empty to hide the whole
+// section (nothing is rendered without a real video). `transcript` repeats the narration word for word, for readers
+// and search engines, and the captions file is public/videos/intro.vtt.
+export const introVideo = {
+  src: '/videos/intro.mp4',
+  poster: '/images/intro-poster.jpg',
+  captions: '/videos/intro.vtt',
+  title: 'Introduction: Muhammad Umer Rizwan and this portfolio',
+  description: 'A two-minute tour: who Muhammad Umer Rizwan (Umer Lakhani) is, his learning journey from C to the web at GU TECH, his projects, the blog and how to get in touch.',
+  uploadDate: '2026-11-11',
+  duration: 'PT2M2S',
+  transcript: [
+    'Hello, and welcome.',
+    'The portfolio of Muhammad Umer Rizwan, also known as Umer Lakhani, a computer science student at GU TECH in Karachi.',
+    'Every skill here was learned step by step.',
+    'It began in matriculation, with the C language and the logic of programming.',
+    'In intermediate came C++, object-oriented programming, and databases.',
+    'Then Python and algorithms, studied independently.',
+    'Today he is learning the web, by building real projects.',
+    'And from 2026, he studies BSCS at GU TECH.',
+    'He learns by building.',
+    'Three case studies in C++, Python and C, and six more projects: a learning management system, a hospital queue, a study planner and a quiz app.',
+    'Each web project has its own page, with features, links and a live demo.',
+    'The blog explains what he learns.',
+    'Every post comes with a thumbnail, video guides and further reading.',
+    'The site is fast, works on phones, and has a light and a dark mode.',
+    'A private admin dashboard lets him publish posts and reply to messages by email.',
+    'Want to talk? Use the contact form.',
+    'Your message goes straight to his inbox, and he replies by email.',
+    'Thank you for watching.',
+  ],
+};
+
+// The learning journey, in order. Every step comes from the education and skills above; nothing here is invented.
+// `current` marks what is being learned right now.
+export const journey = [
+  {
+    when: 'Aug 2019 — May 2024',
+    title: 'Matriculation',
+    place: 'Bait-Ul-Ilm Secondary School',
+    tech: ['C'],
+    text: 'Computer science foundations, programming logic and procedural C: the first lines of code.',
+  },
+  {
+    when: 'Aug 2024 — Jun 2026',
+    title: 'Intermediate · Computer Science',
+    place: 'Govt. Degree Boys College Gulistan-e-Johar',
+    tech: ['C++', 'OOP', 'Databases'],
+    text: 'C++, object-oriented programming and relational database systems. EduTrack grew out of this stage.',
+  },
+  {
+    when: 'Independent study',
+    title: 'Python and algorithms',
+    place: 'Self-taught',
+    tech: ['Python', 'Algorithms', 'Memory'],
+    text: 'Python on my own, plus studies of path-finding (BFS, Dijkstra, A*) and memory allocation that became the interactive demos on this page.',
+  },
+  {
+    when: 'Now',
+    title: 'The web',
+    place: 'Learning by building',
+    tech: ['HTML', 'CSS', 'JavaScript'],
+    text: 'Browser apps without a framework, a full-stack learning management system, and this portfolio.',
+    current: true,
+  },
+  {
+    when: '2026 — 2030 (expected)',
+    title: 'BSCS at GU TECH',
+    place: 'GU TECH, Karachi',
+    tech: ['Computer science'],
+    text: 'Undergraduate computer science studies, building on C, C++ and Python.',
+  },
+  {
+    when: 'Next',
+    title: 'What I am exploring',
+    place: 'Beyond the syllabus',
+    tech: ['Full-stack', 'Automation', 'AI agents', '3D modelling'],
+    text: 'Taking the same step-by-step approach into software tools, automation and AI agents.',
+  },
+];
+
 export const approach = {
   steps: [
     { number: '01', title: 'Understand the problem', text: 'Clarify the goal, the constraints, and the people the solution serves before writing code.' },
@@ -313,7 +430,7 @@ export const approach = {
 };
 
 export const education = [
-  { period: '2026 — 2030', note: 'Expected', title: 'BSCS', place: 'GU Tech, Karachi', text: 'Undergraduate computer science studies.' },
+  { period: '2026 — 2030', note: 'Expected', title: 'BSCS', place: 'GU TECH, Karachi', text: 'Undergraduate computer science studies.' },
   { period: 'Aug 2024 — Jun 2026', title: 'Intermediate · Computer Science', place: 'Govt. Degree Boys College Gulistan-e-Johar', text: 'C++, object-oriented programming, and relational database systems.' },
   { period: 'Aug 2019 — May 2024', title: 'Matriculation', place: 'Bait-Ul-Ilm Secondary School', text: 'Computer science foundations, programming logic, and procedural C.' },
 ];

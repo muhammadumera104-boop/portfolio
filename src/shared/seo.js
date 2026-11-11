@@ -120,7 +120,7 @@ export function breadcrumbs(siteUrl, trail) {
 }
 
 /** schema.org graph for the home page: person + website + profile page. */
-export function homeJsonLd(siteUrl, { projects = [] } = {}) {
+export function homeJsonLd(siteUrl, { projects = [], video = null } = {}) {
   const home = absoluteUrl(siteUrl, '/');
   return {
     '@context': 'https://schema.org',
@@ -134,8 +134,8 @@ export function homeJsonLd(siteUrl, { projects = [] } = {}) {
         image: absoluteUrl(siteUrl, '/images/umer-rizwan.jpg'),
         email: `mailto:${SITE.email}`,
         jobTitle: 'Computer Science student & software developer',
-        description: 'BSCS student at GU Tech, Karachi, building projects in C, C++, Python and web development.',
-        alumniOf: { '@type': 'CollegeOrUniversity', name: 'GU Tech' },
+        description: 'BSCS student at GU TECH, Karachi, building projects in C, C++, Python and web development.',
+        alumniOf: { '@type': 'CollegeOrUniversity', name: 'GU TECH' },
         address: { '@type': 'PostalAddress', addressLocality: 'Karachi', addressCountry: 'PK' },
         knowsAbout: ['C', 'C++', 'Python', 'JavaScript', 'Data structures', 'Algorithms', 'Web development'],
         sameAs: SITE.sameAs,
@@ -157,6 +157,21 @@ export function homeJsonLd(siteUrl, { projects = [] } = {}) {
         mainEntity: { '@id': `${home}#person` },
         isPartOf: { '@id': `${home}#website` },
       },
+      ...(video && video.src
+        ? [{
+            '@type': 'VideoObject',
+            '@id': `${home}#intro-video`,
+            name: video.title,
+            description: video.description,
+            thumbnailUrl: [absoluteUrl(siteUrl, video.poster)],
+            uploadDate: video.uploadDate,
+            duration: video.duration,
+            contentUrl: absoluteUrl(siteUrl, video.src),
+            inLanguage: 'en',
+            transcript: (video.transcript || []).join(' '),
+            author: { '@id': `${home}#person` },
+          }]
+        : []),
       ...(projects.length
         ? [{
             '@type': 'ItemList',

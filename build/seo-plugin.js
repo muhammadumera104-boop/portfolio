@@ -14,13 +14,13 @@ import { fetchProjects, fetchPublishedPosts } from './firestore-rest.js';
 import { SITE, absoluteUrl, blogJsonLd, homeJsonLd, postJsonLd, postPath, projectJsonLd, projectPath, snippet, socialImage } from '../src/shared/seo.js';
 import { isCloudinaryUrl } from '../src/shared/cloudinary.js';
 import { builtInPosts, withBuiltInDefaults } from '../src/data/posts.js';
-import { projects as builtInProjects, webProjects, withBuiltInProjectDefaults } from '../src/data/content.js';
+import { projects as builtInProjects, webProjects, withBuiltInProjectDefaults, introVideo } from '../src/data/content.js';
 import { makeExcerpt, newestFirst, relatedPosts, toDate } from '../src/shared/utils.js';
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const HOME = {
   title: 'Muhammad Umer Rizwan (Umer Lakhani) — Developer in Karachi',
-  description: 'Muhammad Umer Rizwan, also known as Umer Lakhani: BSCS student at GU Tech, Karachi. Projects in C, C++, Python and the web, and a programming blog.',
+  description: 'Muhammad Umer Rizwan, also known as Umer Lakhani: BSCS student at GU TECH, Karachi. Projects in C, C++, Python and the web, and a programming blog.',
 };
 const BLOG = {
   title: 'Blog — Muhammad Umer Rizwan',
@@ -54,7 +54,7 @@ export function seoPlugin() {
         ...builtInProjects.map((p) => ({ name: p.title, url: `/#project-${p.id}` })),
         ...projects.map((p) => ({ name: p.title, url: projectPath(p.slug) })),
       ];
-      return headBlock({ ...common, ...HOME, path: '/', jsonLd: homeJsonLd(siteUrl, { projects: items }) });
+      return headBlock({ ...common, ...HOME, path: '/', jsonLd: homeJsonLd(siteUrl, { projects: items, video: introVideo }) });
     }
     if (name === 'blog.html') return headBlock({ ...common, ...BLOG, path: '/blog/', jsonLd: blogJsonLd(siteUrl, []) });
     if (name === '404.html') {

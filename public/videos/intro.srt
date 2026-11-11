@@ -1,0 +1,71 @@
+1
+00:00:01,000 --> 00:00:04,061
+Hello, and welcome.
+
+2
+00:00:04,361 --> 00:00:14,706
+The portfolio of Muhammad Umer Rizwan, also known as Umer Lakhani, a computer science student at GU TECH in Karachi.
+
+3
+00:00:15,506 --> 00:00:19,207
+Every skill here was learned step by step.
+
+4
+00:00:19,507 --> 00:00:25,683
+It began in matriculation, with the C language and the logic of programming.
+
+5
+00:00:25,983 --> 00:00:33,798
+In intermediate came C++, object-oriented programming, and databases.
+
+6
+00:00:34,098 --> 00:00:39,104
+Then Python and algorithms, studied independently.
+
+7
+00:00:39,404 --> 00:00:44,580
+Today he is learning the web, by building real projects.
+
+8
+00:00:44,880 --> 00:00:51,150
+And from 2026, he studies BSCS at GU TECH.
+
+9
+00:00:51,950 --> 00:00:54,501
+He learns by building.
+
+10
+00:00:54,801 --> 00:01:11,936
+Three case studies in C++, Python and C, and six more projects: a learning management system, a hospital queue, a study planner and a quiz app.
+
+11
+00:01:12,236 --> 00:01:19,456
+Each web project has its own page, with features, links and a live demo.
+
+12
+00:01:20,256 --> 00:01:23,477
+The blog explains what he learns.
+
+13
+00:01:23,777 --> 00:01:30,193
+Every post comes with a thumbnail, video guides and further reading.
+
+14
+00:01:30,993 --> 00:01:37,539
+The site is fast, works on phones, and has a light and a dark mode.
+
+15
+00:01:37,839 --> 00:01:44,994
+A private admin dashboard lets him publish posts and reply to messages by email.
+
+16
+00:01:45,794 --> 00:01:50,275
+Want to talk? Use the contact form.
+
+17
+00:01:50,575 --> 00:01:56,431
+Your message goes straight to his inbox, and he replies by email.
+
+18
+00:01:57,231 --> 00:01:59,752
+Thank you for watching.

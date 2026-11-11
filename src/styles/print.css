@@ -325,3 +325,15 @@
     display: none !important;
   }
 }
+
+/* The lightning is decoration: print the journey as a plain list. */
+@media print {
+  .journey__svg {
+    display: none;
+  }
+
+  .journey__card {
+    opacity: 1;
+    transform: none;
+  }
+}
