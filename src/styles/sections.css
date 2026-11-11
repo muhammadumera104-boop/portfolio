@@ -414,27 +414,15 @@
   gap: var(--s-3);
 }
 
-/* The vermilion frame is offset 12px, so keep the photo clear of the column to its right. */
-.about__portrait-frame {
-  margin-right: 12px;
-  margin-bottom: 12px;
-}
 
-/* Photo sits in a thin offset frame, like a mounted print. */
-.about__portrait-frame {
-  position: relative;
-  isolation: isolate;
-}
 
-.about__portrait-frame::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
+/* The photo sits INSIDE a plate: a thin accent border with even padding, so it never pokes out of the frame and
+   the plate's outer edge is what lines up with the grid. */
+.about__portrait-frame {
+  padding: var(--s-3);
   border: 1px solid var(--vermilion);
-  border-radius: var(--radius-s);
-  transform: translate(12px, 12px);
-  transition: transform var(--dur-base) var(--ease-out);
+  border-radius: var(--radius-m);
+  background: var(--bg-raised);
 }
 
 .about__portrait picture {
@@ -442,7 +430,6 @@
   overflow: hidden;
   border-radius: var(--radius-s);
   background: var(--paper-2);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 18px 40px -18px rgb(0 0 0 / 0.35);
 }
 
 .about__portrait img {
@@ -461,7 +448,6 @@
 
 @media (hover: hover) {
   .about__portrait:hover img { transform: scale(1.03); }
-  .about__portrait:hover .about__portrait-frame::before { transform: translate(6px, 6px); }
 }
 
 .about__lead {
