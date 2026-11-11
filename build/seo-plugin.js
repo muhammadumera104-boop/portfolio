@@ -10,7 +10,8 @@ import { pathToFileURL } from 'node:url';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { loadEnv } from 'vite';
 import { DEFAULT_IMAGE, headBlock, resolveSiteUrl, robotsTxt, sitemapXml, swap } from './seo.js';
-import { fetchProjects, fetchPublishedPosts } from './firestore-rest.js';
+import { fetchCollection, fetchProjects, fetchPublishedPosts } from './firestore-rest.js';
+import { NOW_DOC_ID } from '../src/shared/now.js';
 import { SITE, absoluteUrl, blogJsonLd, homeJsonLd, postJsonLd, postPath, projectJsonLd, projectPath, snippet, socialImage } from '../src/shared/seo.js';
 import { isCloudinaryUrl } from '../src/shared/cloudinary.js';
 import { builtInPosts, withBuiltInDefaults } from '../src/data/posts.js';
@@ -35,8 +36,24 @@ export function seoPlugin() {
   let buildFailed = false;
   let postsOnce;
   let projectsOnce;
+  let nowOnce;
 
   const site = () => resolveSiteUrl(env);
+
+  /** The "Now" document the owner saved in the dashboard (experiences/now), or null to use the built-in content. */
+  const collectNow = () =>
+    (nowOnce ||= (async () => {
+      const projectId = env.VITE_FIREBASE_PROJECT_ID;
+      if (!projectId) return null;
+      try {
+        const saved = (await fetchCollection(projectId, 'experiences')).find((doc) => doc.id === NOW_DOC_ID) || null;
+        console.log(`[seo] "Now" section from ${saved ? 'Firestore' : 'the built-in content'}.`);
+        return saved;
+      } catch (error) {
+        console.warn(`[seo] could not read the "Now" section from Firestore (${error.message}); using the built-in content.`);
+        return null;
+      }
+    })());
   /** Search-console verification tags and the analytics id, all optional and read from the environment. */
   const tracking = () => ({
     verification: env.VITE_GOOGLE_SITE_VERIFICATION || '',
@@ -156,12 +173,17 @@ export function seoPlugin() {
         const posts = await collectPosts();
         out = out.replace('<!--latest-posts-->', () => latestPostsHtml(posts.slice(0, 3)));
       }
+      if (name === 'index.html' && out.includes('<!--now:start-->')) {
+        const { nowSlot } = await load('/src/render/sections/now.js');
+        out = swap(out, 'now', nowSlot(await collectNow()));
+      }
       return out;
     },
 
     buildStart() {
       postsOnce = undefined;
       projectsOnce = undefined;
+      nowOnce = undefined;
     },
 
     buildEnd(error) {

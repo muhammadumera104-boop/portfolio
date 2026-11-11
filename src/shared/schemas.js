@@ -146,6 +146,18 @@ export const experienceSchema = z.object({
   displayOrder: z.coerce.number().int().min(0).max(999).default(0),
 });
 
+// The "Now" section, saved as one document (experiences/now). Lines are short on purpose: it is a snapshot, not an essay.
+export const nowSchema = z.object({
+  month: z
+    .string()
+    .trim()
+    .regex(/^(\d{4}-(0[1-9]|1[0-2]))?$/, 'Use a month such as 2026-11, or leave it empty.')
+    .default(''),
+  building: z.array(text(1, 120)).max(5, 'Add at most 5 lines.').default([]),
+  learning: z.array(text(1, 120)).max(5, 'Add at most 5 lines.').default([]),
+  note: z.string().trim().max(200, 'Keep the note under 200 characters.').default(''),
+});
+
 /** Turns a failed safeParse into { fieldName: 'first message' }. */
 export function fieldErrors(error) {
   const out = {};

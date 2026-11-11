@@ -10,10 +10,12 @@ import * as api from '../firebase/admin-api.js';
 import { createEditor } from './editor.js';
 import { toast } from '../shared/toast.js';
 import {
-  postSchema, projectSchema, skillSchema, experienceSchema, fieldErrors,
+  postSchema, projectSchema, skillSchema, experienceSchema, nowSchema, fieldErrors,
 } from '../shared/schemas.js';
 import { slugify, readingTime, makeExcerpt, formatDate, toDate, parseCsv, parseLines } from '../shared/utils.js';
 import { esc, list } from '../render/util.js';
+import { NOW_DOC_ID, cleanNow } from '../shared/now.js';
+import { now as nowDefault } from '../data/content.js';
 import { suggestEmail } from '../shared/email-check.js';
 import {
   parseVideoLines, formatVideoLines, parseResourceLines, formatResourceLines, parseScreenshotLines, formatScreenshotLines,
@@ -25,7 +27,7 @@ const state = { user: null, tab: 'overview', editor: null };
 
 const TABS = [
   ['overview', 'Overview'], ['blog', 'Blog'], ['projects', 'Projects'], ['skills', 'Skills'],
-  ['experiences', 'Education'], ['messages', 'Messages'], ['comments', 'Comments'],
+  ['experiences', 'Education'], ['now', 'Now'], ['messages', 'Messages'], ['comments', 'Comments'],
 ];
 
 // ── helpers ─────────────────────────────────────────────────
@@ -124,7 +126,7 @@ function go(tab) {
   main.innerHTML = '<p class="admin__loading">Loading…</p>';
   const views = {
     overview: viewOverview, blog: viewBlog, projects: () => viewCrud('projects'), skills: () => viewCrud('skills'),
-    experiences: () => viewCrud('experiences'), messages: viewMessages, comments: viewComments,
+    experiences: () => viewCrud('experiences'), now: viewNow, messages: viewMessages, comments: viewComments,
   };
   Promise.resolve(views[tab](main)).catch((error) => {
     console.error(error);
@@ -272,7 +274,7 @@ const CRUD = {
 
 async function viewCrud(name) {
   const cfg = CRUD[name];
-  const items = (await api.listAll(name)).sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+  const items = (await api.listAll(name)).filter((d) => d.kind !== 'now').sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
   state.items = items;
   document.getElementById('admin-main').innerHTML = `
     <header class="admin__head"><h1>${cfg.title}</h1><button type="button" class="btn btn--ink btn--sm" data-new-item="${name}">Add new</button></header>
@@ -337,6 +339,35 @@ async function submitCrud(form) {
   const id = form.dataset.id || null;
   const saved = await act(() => api.saveDoc(name, id, result.data), 'Saved.');
   if (saved) go(name);
+}
+
+// ── "Now" section ───────────────────────────────────────────
+// One document (experiences/now). The security rules already let only the owner write to `experiences`.
+async function viewNow(main) {
+  const saved = (await api.listAll('experiences')).find((d) => d.id === NOW_DOC_ID);
+  const current = cleanNow(saved || nowDefault);
+  main.innerHTML = `
+    <header class="admin__head"><h1>Now</h1></header>
+    <p class="panel">What you are building and learning this month. It shows in the “Now” section of the home page. Visitors see a change as soon as you save; search engines see it after the next deploy. Leave both lists empty to hide the section.${saved ? '' : ' You have not saved anything yet, so the built-in text is shown below.'}</p>
+    <form class="form" data-now-form novalidate>
+      <div class="field"><label for="n-month">Month this was last updated</label><input id="n-month" name="month" type="month" value="${esc(current.month)}" placeholder="2026-11"><p class="field__error" data-err="month"></p></div>
+      <div class="field"><label for="n-building">Building (one per line, at most 5)</label><textarea id="n-building" name="building" rows="5">${esc(current.building.join('\n'))}</textarea><p class="field__error" data-err="building"></p></div>
+      <div class="field"><label for="n-learning">Learning (one per line, at most 5)</label><textarea id="n-learning" name="learning" rows="5">${esc(current.learning.join('\n'))}</textarea><p class="field__error" data-err="learning"></p></div>
+      <div class="field"><label for="n-note">Short note (optional)</label><input id="n-note" name="note" maxlength="200" value="${esc(current.note)}"><p class="field__error" data-err="note"></p></div>
+      <div class="form__actions"><button class="btn btn--ink" type="submit">Save</button></div>
+    </form>`;
+}
+
+async function submitNow(form) {
+  const raw = Object.fromEntries(new FormData(form));
+  const data = { month: raw.month || '', building: parseLines(raw.building || ''), learning: parseLines(raw.learning || ''), note: raw.note || '' };
+  const result = nowSchema.safeParse(data);
+  if (!result.success) {
+    showErrors(form, fieldErrors(result.error));
+    return toast('Please fix the highlighted fields.', 'error');
+  }
+  showErrors(form, {});
+  await act(() => api.saveDoc('experiences', NOW_DOC_ID, { kind: 'now', ...result.data }), 'Saved. Visitors see it now; search engines see it after the next deploy.');
 }
 
 // ── messages & comments ─────────────────────────────────────
@@ -455,6 +486,7 @@ root.addEventListener('submit', async (event) => {
       if (sent) go('messages');
     } else if (form.matches('[data-post-form]')) await submitPost(form);
     else if (form.matches('[data-crud-form]')) await submitCrud(form);
+    else if (form.matches('[data-now-form]')) await submitNow(form);
   } finally {
     button.disabled = false;
   }

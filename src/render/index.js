@@ -7,6 +7,7 @@ import { projectsSection } from './sections/projects.js';
 import { journeySection } from './sections/journey.js';
 import { introSection } from './sections/intro.js';
 import { onlineSection } from './sections/online.js';
+import { nowSlot } from './sections/now.js';
 import { certificatesSection } from './sections/certificates.js';
 import { testimonialsSection } from './sections/testimonials.js';
 import { approachSection, educationSection, contactSection, footer } from './sections/closing.js';
@@ -23,6 +24,7 @@ ${header()}
   ${projectsSection()}
   ${approachSection()}
   ${educationSection()}
+  <!--now:start-->${nowSlot()}<!--now:end-->
   ${certificatesSection()}
   ${testimonialsSection()}
   <!--latest-posts-->

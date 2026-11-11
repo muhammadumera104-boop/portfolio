@@ -492,6 +492,22 @@ export const education = [
   { period: 'Aug 2019 — May 2024', title: 'Matriculation', place: 'Bait-Ul-Ilm Secondary School', text: 'Computer science foundations, programming logic, and procedural C.' },
 ];
 
+// The "Now" section: what I am building and learning this month (see render/sections/now.js).
+// This is the starting content. After the first save in the admin dashboard (Now tab) the dashboard's version is used,
+// so you normally never edit this by hand. month is 'YYYY-MM'. At most 5 short lines in each list.
+export const now = {
+  month: '2026-11',
+  building: [
+    'This portfolio: case studies, a blog and an admin dashboard',
+    'The GU TECH Learning Management System (React, Node.js, Supabase)',
+  ],
+  learning: [
+    'HTML, CSS and JavaScript, by building real pages',
+    'Data structures and algorithms in C, C++ and Python',
+  ],
+  note: '',
+};
+
 // Certificates and achievements (see render/sections/certificates.js). Only add things that are really yours.
 // date is '2025-03' (year and month) or '2025' (year only). url is optional: an https link where anyone can verify the
 // certificate (Coursera, Credly, a university page ...). While both lists are empty the whole section is left out.

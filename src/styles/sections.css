@@ -2373,3 +2373,64 @@ html:not(.js) .journey__node {
   width: fit-content;
   margin-top: var(--s-2);
 }
+
+/* ───────────────────────── Now ───────────────────────── */
+
+.now__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--s-6) var(--s-5);
+  margin-top: var(--s-7);
+}
+
+.now__col {
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 2px solid var(--fg);
+}
+
+.now__h3 {
+  margin: 0;
+  color: var(--accent-text);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.now__list {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.now__list li {
+  padding-left: 1.2em;
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+  line-height: 1.4;
+  text-indent: -1.2em;
+}
+
+.now__list li::before {
+  content: '→';
+  display: inline-block;
+  width: 1.2em;
+  color: var(--accent);
+  text-indent: 0;
+}
+
+.now__note {
+  max-width: var(--measure);
+  margin: var(--s-6) 0 0;
+  color: var(--fg-muted);
+}
+
+.now__updated {
+  margin: var(--s-5) 0 0;
+  color: var(--fg-muted);
+}
