@@ -1,0 +1,4 @@
+*.exe
+*.dat
+*.o
+__pycache__/

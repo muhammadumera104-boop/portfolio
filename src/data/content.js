@@ -73,65 +73,122 @@ export const skills = [
 export const ticker = ['C', 'C++', 'Python', 'Object-oriented programming', 'DBMS', 'Data structures', 'Algorithms', 'HTML — learning', 'CSS — learning', 'JavaScript — learning', 'Clean code', 'Problem solving'];
 
 // `visual` picks the figure rendered for each project: 'edutrack' | 'pathfinder' | 'heap'.
+// The three case studies are real, tested programs: their source is in the case-studies/ folder of the portfolio
+// repository, and the screenshots below are captures of their real output (public/images/projects/).
+const CASE_STUDY_REPO = 'https://github.com/muhammadumera104-boop/portfolio/tree/main/case-studies';
+const AI_NOTE = 'Written as a study project with AI assistance (Claude), then compiled, run and tested. The code is small enough to read in one sitting, and the files carry comments that explain the reasoning.';
+
 export const projects = [
   {
     id: 'edutrack',
     number: '01',
     title: 'EduTrack Academic Management',
     kind: 'C++ · OOP',
-    status: 'Concept project',
-    summary: 'An academic management system concept with student and faculty classes, file-based record persistence, input handling, and GPA calculations.',
-    problem: 'Keep student records and GPA calculations organised in one place.',
+    status: 'Working study project',
+    summary: 'A console academic management system in C++17: student and faculty classes, file-based record persistence, input validation and credit-weighted GPA calculation, with 34 automated checks.',
+    problem: 'Keep student records and GPA calculations organised in one place, and never lose or corrupt them because of bad input.',
     details: [
-      'Models students and faculty as classes, using inheritance and polymorphism.',
-      'Persists records to files so data survives between runs.',
-      'Validates input and rejects malformed entries.',
-      'Calculates GPA from recorded grades.',
+      'Student and Faculty inherit from an abstract Person class; one loop prints both through virtual functions (polymorphism).',
+      'Records are saved one per line and loaded back; a damaged line is skipped and reported with its line number.',
+      'Ids, course codes, credit hours and marks are validated; bad input throws ValidationError and changes nothing.',
+      'GPA is weighted by credit hours on a 4.0 scale. People are owned by std::unique_ptr, so there is no manual delete.',
     ],
-    outcome: 'Practice with inheritance, polymorphism, file handling, and validation in a console application.',
-    tech: ['C++17', 'OOP', 'File I/O', 'DBMS concepts'],
+    outcome: 'A working console program with 34 passing checks (also at -O0 to -O3), and practice with inheritance, polymorphism, file handling and validation.',
+    tech: ['C++17', 'OOP', 'File I/O', 'Validation'],
     visual: 'edutrack',
-    repo: '', // put this project's own repository link here once it is public (never the profile page)
+    repo: `${CASE_STUDY_REPO}/edutrack`,
     demo: null,
+    process: `${AI_NOTE}\n\nThe design came first: one abstract class, two subclasses, a registry that owns them, and a text file format. Validation was written before the menu, so every rule has a test.`,
+    screenshots: [
+      { url: 'images/projects/edutrack-validation.webp', alt: 'EduTrack demo output: people are added, while a bad id, a duplicate id, a duplicate course and marks of 140 are rejected with clear messages.' },
+      { url: 'images/projects/edutrack-records.webp', alt: 'EduTrack output: the record list, a transcript with a GPA of 3.03, records loaded back from the file, and 34 of 34 tests passing.' },
+    ],
+    challenges: [
+      { challenge: 'Bad input must not crash the menu or leave a half-added record.', solution: 'Every rule throws ValidationError before anything is stored. The menu catches it, prints the message and asks again. A test checks that a rejected result changes nothing.' },
+      { challenge: 'A damaged or hand-edited data file.', solution: 'load() parses line by line, skips lines that fail validation and returns a report with the line number of each problem instead of stopping.' },
+      { challenge: 'A "|" or ";" typed into a name would break the file format.', solution: 'Names are validated, so those two characters are rejected up front.' },
+      { challenge: 'The tests crashed on one computer while the same code passed on others.', solution: 'Shrinking the program until the crash sat in one call showed the cause: a mismatched runtime DLL was being loaded, not a bug in the code. Linking statically fixed it.' },
+    ],
+    lessons: [
+      'A virtual destructor is what makes deleting a Student through a Person pointer safe.',
+      'GPA must be weighted by credit hours; a plain average of marks gives a different, wrong number.',
+      'Owning objects with std::unique_ptr removes manual delete and the leaks that come with it.',
+      'When the same program behaves differently on different setups, suspect the environment before the code, and shrink the program to find the first failing call.',
+    ],
   },
   {
     id: 'algovisualizer',
     number: '02',
     title: 'AlgoVisualizer & Pathfinding Engine',
     kind: 'Python · Algorithms',
-    status: 'Concept project',
-    summary: 'An algorithm visualisation concept for graph traversal, shortest-path search, and procedural maze generation.',
-    problem: 'Make search algorithms visible, so it is clear how each one explores a graph.',
+    status: 'Working study project',
+    summary: 'A Python terminal tool that draws BFS, DFS, Dijkstra and A* on a grid with mud, animates the search, and generates repeatable mazes. Standard library only, with 15 tests.',
+    problem: 'Make search algorithms visible, so it is clear how each one explores a graph and why they give different answers.',
     details: [
-      'Graph traversal over a grid of nodes.',
-      'Shortest paths with Dijkstra’s algorithm and A*.',
-      'Procedural maze generation to create new problems.',
+      'Graph traversal over a grid with walls and mud; stepping onto mud costs 5.',
+      'Dijkstra and A* share one loop and differ only in the estimate (zero versus Manhattan distance).',
+      'Mazes are carved with a recursive backtracker; the same seed always gives the same maze.',
+      'Results are drawn as text, and --animate plays the search one picture at a time.',
     ],
-    outcome: 'A deeper feel for how heuristics change the amount of work a search does.',
+    outcome: 'On the built-in grid BFS takes 18 steps at cost 30, while Dijkstra takes 24 steps at cost 24. A deeper feel for how cost and heuristics change what a search does.',
     tech: ['Python 3', 'Dijkstra', 'A*', 'Graph theory'],
     visual: 'pathfinder',
-    repo: '', // put this project's own repository link here once it is public (never the profile page)
+    repo: `${CASE_STUDY_REPO}/algovisualizer`,
     demo: null,
+    process: `${AI_NOTE}\n\nThe grid and the four algorithms came first, then the text renderer, then the maze generator. The tests pin down the behaviour that matters: shortest versus cheapest, no route, a start inside a wall, and repeatable mazes.`,
+    screenshots: [
+      { url: 'images/projects/algovisualizer-race.gif', alt: 'Animation: Dijkstra and A* spreading across the same grid. A* explores 115 cells and Dijkstra 127, and both find a path of cost 24.' },
+      { url: 'images/projects/algovisualizer-compare.webp', alt: 'BFS goes straight through the mud (18 steps, cost 30); Dijkstra goes around it (24 steps, cost 24). A table lists all four algorithms.' },
+      { url: 'images/projects/algovisualizer-maze.webp', alt: 'A generated 15 by 31 maze with the path found by A* drawn in asterisks from S to G.' },
+    ],
+    challenges: [
+      { challenge: 'Breadth-first search finds the fewest steps, but it ignores cost, so it walked straight through the mud.', solution: 'Dijkstra tracks the real cost of each cell. The demo grid shows the difference: 18 steps at cost 30 for BFS, 24 steps at cost 24 for Dijkstra.' },
+      { challenge: 'A priority queue keeps old, more expensive entries for a cell that was already settled.', solution: 'Instead of decreasing keys, the loop skips any cell it has already settled.' },
+      { challenge: 'Comparing Dijkstra and A* fairly.', solution: 'They share one function. With an estimate of zero it is Dijkstra; with Manhattan distance it is A*, so the only difference is the estimate.' },
+      { challenge: 'Generated mazes must always be solvable.', solution: 'The recursive backtracker builds a perfect maze. A test checks that the number of open cells is exactly 2 x rooms - 1 and that BFS finds the goal for several seeds.' },
+    ],
+    lessons: [
+      'A* stays optimal only if its estimate never promises more than the truth; Manhattan distance with a minimum step cost of 1 is safe.',
+      'Heuristics help most when they point the right way: on an open field A* explores a fraction of what Dijkstra does, while on the mud grid the gap is small (115 versus 127 cells).',
+      'A fixed neighbour order and a seed make runs repeatable, which is what makes algorithms testable.',
+    ],
   },
   {
     id: 'allocator',
     number: '03',
     title: 'Custom Memory Allocator & DS Toolkit',
     kind: 'C · Systems',
-    status: 'Systems study',
-    summary: 'A systems programming study exploring heap allocation, free-list management, block coalescing, and reusable data structures.',
-    problem: 'Understand what actually happens behind malloc() and free().',
+    status: 'Working study project',
+    summary: 'A malloc and free replacement in C on a fixed 64 KiB heap: first fit, block splitting, coalescing, misuse detection and a heap consistency checker, plus a growing array and a stack built on it. 11,234 automated checks.',
+    problem: 'Understand what actually happens behind malloc() and free(), including why a program can fail to allocate when plenty of memory is free.',
     details: [
-      'Heap allocation from a managed region of memory.',
-      'A free list that tracks available blocks.',
-      'Coalescing neighbouring free blocks to limit fragmentation.',
-      'Reusable data structures built on top.',
+      'Every block has a header, and headers form a doubly linked list in address order.',
+      'my_malloc uses first fit and splits blocks that are bigger than needed; my_free merges free neighbours in both directions.',
+      'Double frees, wild pointers and pointers into the middle of a block are reported instead of corrupting the heap.',
+      'A Vec and a Stack are built on the allocator and never touch the system malloc, so its statistics show whether they leak.',
     ],
-    outcome: 'Comfort with pointers, memory layout, and the cost of fragmentation.',
+    outcome: 'A working allocator with a demo that shows fragmentation and coalescing, and a 20,000-step random stress test that checks no block is ever overwritten.',
     tech: ['ANSI C', 'Pointers', 'Memory', 'Data structures'],
     visual: 'heap',
-    repo: '', // put this project's own repository link here once it is public (never the profile page)
+    repo: `${CASE_STUDY_REPO}/allocator`,
     demo: null,
+    process: `${AI_NOTE}\n\nThe block header and the invariants came first; the invariants became heap_check(). Allocation, freeing and coalescing were added in that order, and the checker ran after almost every test step.`,
+    screenshots: [
+      { url: 'images/projects/allocator-fragmentation.webp', alt: 'Allocator demo: 34304 bytes are free in three holes, but the largest is 16000 bytes, so a 20000-byte request returns NULL.' },
+      { url: 'images/projects/allocator-coalescing.webp', alt: 'Allocator demo: freeing the middle block merges three holes into 26064 bytes, so the 20000-byte request succeeds; 11234 of 11234 tests pass.' },
+    ],
+    challenges: [
+      { challenge: 'Freed blocks must merge with free neighbours on both sides, or the heap fragments for good.', solution: 'Blocks sit in a doubly linked list in address order, so a block\'s list neighbours are its memory neighbours. free() merges forward, then backward.' },
+      { challenge: 'Telling a real pointer from a bad one, and catching a double free.', solution: 'Each header carries a magic number plus range and alignment checks. A header that was merged away has its magic cleared, so a stale pointer to it is rejected.' },
+      { challenge: 'Proving the heap never gets corrupted.', solution: 'heap_check() verifies the links, alignment and that headers plus payloads add up to the whole arena. The tests call it constantly, and a random stress test fills each block with a pattern and verifies it before freeing.' },
+      { challenge: 'A size multiplication overflowing inside calloc.', solution: 'my_calloc checks count against the maximum size before multiplying and returns NULL if it would overflow.' },
+    ],
+    lessons: [
+      'Fragmentation is real: the demo has 34 KB free in total, yet a 20 KB request fails because no single hole is big enough.',
+      'Bookkeeping costs memory: every block spends 32 bytes on its header.',
+      'First fit is simple, but it walks the list on every allocation; real allocators use size classes and per-thread arenas.',
+      'Writing the invariants down as a checker catches mistakes the moment they happen, not many steps later.',
+    ],
   },
 ];
 

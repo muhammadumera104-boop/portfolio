@@ -26,6 +26,7 @@ export function buildSeed() {
         screenshots: p.screenshots || [],
         challenges: p.challenges || [],
         lessons: p.lessons || [],
+        process: p.process || '',
         featured: true,
         displayOrder: i + 1,
       },

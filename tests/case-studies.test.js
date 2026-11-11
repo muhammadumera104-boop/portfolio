@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { projectPageHtml } from '../src/render/project.js';
 import { projectsSection } from '../src/render/sections/projects.js';
 import { repoUrl } from '../src/shared/utils.js';
@@ -26,10 +28,24 @@ describe('case studies', () => {
     expect(html).not.toContain('GitHub profile');
     expect(html).not.toContain('href="https://github.com/muhammadumera104-boop"');
   });
-  it('each one links to its own project page and says honestly when the source is not published', () => {
+  it('each one links to its own project page and to its own source folder, never to the profile', () => {
     const html = projectsSection();
-    for (const p of projects) expect(html).toContain(`href="/projects/${p.id}/"`);
-    expect(html).toContain('Source code not published');
+    for (const p of projects) {
+      expect(html).toContain(`href="/projects/${p.id}/"`);
+      expect(p.repo).toBe(`https://github.com/muhammadumera104-boop/portfolio/tree/main/case-studies/${p.id}`);
+      expect(html).toContain(`href="${p.repo}"`);
+    }
+    expect(html).toContain('Source code');
+    expect(html).not.toContain('Source code not published');
+  });
+  it('the source folder each link points to really exists and has a README and tests', () => {
+    const root = resolve(import.meta.dirname, '../case-studies');
+    for (const p of projects) {
+      expect(existsSync(resolve(root, p.id, 'README.md')), `${p.id} README`).toBe(true);
+    }
+    expect(existsSync(resolve(root, 'edutrack/tests.cpp'))).toBe(true);
+    expect(existsSync(resolve(root, 'algovisualizer/test_algorithms.py'))).toBe(true);
+    expect(existsSync(resolve(root, 'allocator/tests.c'))).toBe(true);
   });
   it('the project page shows a "View source" link as soon as a real repository is set', () => {
     const withRepo = { slug: 'edutrack', title: 'EduTrack', summary: 'x', githubUrl: 'https://github.com/someone/edutrack' };
@@ -64,11 +80,31 @@ describe('challenges and lessons', () => {
     const tooMany = projectSchema.safeParse({ ...valid, lessons: Array(9).fill('x') });
     expect(tooMany.success).toBe(false);
   });
-  it('the seed carries screenshots, challenges and lessons for the case studies (empty until real ones are added)', () => {
-    const seeded = buildSeed().projects.find((p) => p.id === 'edutrack').data;
-    expect(seeded.screenshots).toEqual([]);
-    expect(seeded.challenges).toEqual([]);
-    expect(seeded.lessons).toEqual([]);
+  it('the seed carries the real screenshots, challenges, lessons and process of every case study', () => {
+    for (const { id, data } of buildSeed().projects.filter((p) => projects.some((c) => c.id === p.id))) {
+      expect(data.screenshots.length, `${id} screenshots`).toBeGreaterThanOrEqual(2);
+      expect(data.challenges.length, `${id} challenges`).toBeGreaterThanOrEqual(3);
+      expect(data.lessons.length, `${id} lessons`).toBeGreaterThanOrEqual(3);
+      expect(data.process, `${id} process`).toContain('AI assistance');
+    }
+  });
+  it('every screenshot file exists in public/ and has real alt text', () => {
+    for (const p of projects) {
+      for (const shot of p.screenshots) {
+        expect(existsSync(resolve(import.meta.dirname, '../public', shot.url)), shot.url).toBe(true);
+        expect(shot.alt.length).toBeGreaterThan(30);
+        expect(shot.alt.length).toBeLessThanOrEqual(160);
+      }
+    }
+    expect(projects[1].screenshots[0].url.endsWith('.gif')).toBe(true); // the animated one
+  });
+  it('each case study page shows the gallery, challenges, lessons and process, and the source link', () => {
+    for (const { id, data } of buildSeed().projects.filter((p) => projects.some((c) => c.id === p.id))) {
+      const html = projectPageHtml(data);
+      for (const heading of ['Challenges and lessons', 'What I learned', 'Screenshots', 'Development process']) expect(html, `${id}: ${heading}`).toContain(heading);
+      expect(html.match(/<figure class="shots__item"/g)).toHaveLength(data.screenshots.length);
+      expect(html).toContain('View source on GitHub');
+    }
   });
 });
 

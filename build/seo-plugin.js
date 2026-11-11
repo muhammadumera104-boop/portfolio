@@ -93,8 +93,9 @@ export function seoPlugin() {
     projectsOnce ||= (async () => {
       const projectId = env.VITE_FIREBASE_PROJECT_ID;
       const known = new Set(builtInProjects.map((b) => b.id));
-      // The three case studies also get their own page. They start from the built-in data (src/data/content.js) and
-      // anything saved in the dashboard (Firestore) wins, so editing them there needs no code change.
+      // The three case studies also get their own page. Like on the home page, their content comes from
+      // src/data/content.js (the code is the source of truth); Firestore only adds fields the built-in data does not
+      // have, such as updatedAt for the sitemap.
       const caseStudies = buildSeed().projects.filter((p) => known.has(p.id)).map((p) => ({ ...p.data, id: p.id }));
       let live = [];
       let fromDb = [];
@@ -106,7 +107,7 @@ export function seoPlugin() {
           console.warn(`[seo] could not read projects from Firestore (${error.message}); using the built-in projects.`);
         }
       }
-      const mergedCaseStudies = caseStudies.map((c) => ({ ...c, ...(fromDb.find((p) => p.slug === c.slug) || {}) }));
+      const mergedCaseStudies = caseStudies.map((c) => ({ ...(fromDb.find((p) => p.slug === c.slug) || {}), ...c }));
       const source = [...mergedCaseStudies, ...(live.length ? live : webProjects.map((p) => ({ ...p, id: p.slug })))];
       const valid = source.filter((p) => {
         const ok = SLUG.test(String(p.slug || '')) && p.title && p.summary;
