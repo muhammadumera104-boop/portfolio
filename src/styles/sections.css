@@ -2248,3 +2248,128 @@ html:not(.js) .journey__node {
     width: 100%;
   }
 }
+
+/* ───────────────────────── Testimonials ───────────────────────── */
+
+.testimonials__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--s-6) var(--s-5);
+  margin: var(--s-7) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.testimonial {
+  display: grid;
+}
+
+.testimonial__figure {
+  display: grid;
+  align-content: space-between;
+  gap: var(--s-5);
+  height: 100%;
+  margin: 0;
+  padding: var(--s-5) 0 0;
+  border-top: 2px solid var(--fg);
+}
+
+.testimonial__quote {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.7vw, 1.4rem);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.testimonial__quote p {
+  margin: 0;
+}
+
+/* a large opening quotation mark, drawn by CSS so it is not read out by screen readers */
+.testimonial__quote::before {
+  content: '“';
+  display: block;
+  margin-bottom: var(--s-2);
+  color: var(--accent);
+  font-size: 3rem;
+  line-height: 0.6;
+}
+
+.testimonial__who {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.testimonial__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: fit-content;
+  text-decoration: none;
+}
+
+.testimonial__link:hover .testimonial__name,
+.testimonial__link:focus-visible .testimonial__name {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.testimonial__name {
+  font-weight: 600;
+}
+
+.testimonial__role {
+  color: var(--fg-muted);
+}
+
+/* ───────────────────────── Certificates and achievements ───────────────────────── */
+
+.credentials__group {
+  margin: var(--s-7) 0 var(--s-4);
+  font-size: var(--fs-h3);
+  letter-spacing: -0.02em;
+}
+
+.credentials__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--s-6) var(--s-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.credential {
+  display: grid;
+  align-content: start;
+  gap: var(--s-2);
+  padding-top: var(--s-4);
+  border-top: 2px solid var(--fg);
+}
+
+.credential__date {
+  margin: 0;
+  color: var(--accent-text);
+}
+
+.credential__title {
+  margin: 0;
+  font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.credential__issuer {
+  margin: 0;
+  color: var(--fg-muted);
+}
+
+.credential__text {
+  margin: 0;
+}
+
+.credential__link {
+  width: fit-content;
+  margin-top: var(--s-2);
+}

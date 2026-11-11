@@ -492,6 +492,28 @@ export const education = [
   { period: 'Aug 2019 — May 2024', title: 'Matriculation', place: 'Bait-Ul-Ilm Secondary School', text: 'Computer science foundations, programming logic, and procedural C.' },
 ];
 
+// Certificates and achievements (see render/sections/certificates.js). Only add things that are really yours.
+// date is '2025-03' (year and month) or '2025' (year only). url is optional: an https link where anyone can verify the
+// certificate (Coursera, Credly, a university page ...). While both lists are empty the whole section is left out.
+// Example certificate:
+//   { title: 'Python for Everybody', issuer: 'Coursera, University of Michigan', date: '2025-03', url: 'https://www.coursera.org/account/accomplishments/verify/XXXX' },
+// Example achievement:
+//   { title: 'First place, university coding contest', detail: 'One sentence about what happened and what you did.', date: '2026-01', url: '' },
+export const certificates = [];
+export const achievements = [];
+
+// Testimonials: 2 or 3 short quotes from real people, shown in their own section (see render/sections/testimonials.js).
+// Rules: only add words a person actually said or wrote, and ask their permission to publish them with their name.
+// "url" must be an https link where a visitor can check who they are (a LinkedIn page, a faculty page, a GitHub profile).
+// While this list is empty, the whole section is left out of the page. Example of one entry:
+//   {
+//     quote: 'A short sentence or two, in their own words (20 to 400 characters).',
+//     name: 'Full Name',
+//     role: 'Lecturer, GU TECH',
+//     url: 'https://www.linkedin.com/in/their-profile',
+//   },
+export const testimonials = [];
+
 export const recognition = [
   { label: 'Distinction', title: 'Hafiz-e-Quran', place: 'Wifaq-Ul-Madaris', text: 'Completed memorisation of the Holy Quran, verified by Wifaq-Ul-Madaris.' },
   { label: 'Languages', title: 'Urdu · English', place: 'Native · Fluent', text: 'Comfortable communicating and collaborating in both.' },

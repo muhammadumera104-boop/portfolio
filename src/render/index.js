@@ -7,6 +7,8 @@ import { projectsSection } from './sections/projects.js';
 import { journeySection } from './sections/journey.js';
 import { introSection } from './sections/intro.js';
 import { onlineSection } from './sections/online.js';
+import { certificatesSection } from './sections/certificates.js';
+import { testimonialsSection } from './sections/testimonials.js';
 import { approachSection, educationSection, contactSection, footer } from './sections/closing.js';
 
 export const render = () => `
@@ -21,6 +23,8 @@ ${header()}
   ${projectsSection()}
   ${approachSection()}
   ${educationSection()}
+  ${certificatesSection()}
+  ${testimonialsSection()}
   <!--latest-posts-->
   ${onlineSection()}
   ${contactSection()}
