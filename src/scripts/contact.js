@@ -5,11 +5,13 @@ import { profile } from '../data/content.js';
 import { contactSchema, fieldErrors } from '../shared/schemas.js';
 import { toast } from '../shared/toast.js';
 import { describeOutcome, tooFast } from '../shared/contact-flow.js';
+import { suggestEmail } from '../shared/email-check.js';
 
 export function initContactForm() {
   const form = document.querySelector('[data-contact-form]');
   if (!form) return;
   const openedAt = Date.now();
+  let confirmedEmail = ''; // an address the visitor chose to keep after we asked "did you mean ...?"
   const status = form.querySelector('[data-form-status]');
   const submit = form.querySelector('button[type="submit"]');
   const fields = [...form.querySelectorAll('input[name="name"], input[name="email"], textarea')];
@@ -58,6 +60,18 @@ export function initContactForm() {
       status.textContent = 'Please fix the highlighted fields.';
       toast('Please fix the highlighted fields.', 'error');
       form.querySelector('[aria-invalid="true"]')?.focus();
+      return;
+    }
+
+    // A mistyped domain (gma5l.com) is accepted by mail servers and bounces later, so ask now, once.
+    const guess = suggestEmail(result.data.email);
+    if (guess && confirmedEmail !== result.data.email) {
+      confirmedEmail = result.data.email;
+      const slot = document.getElementById('c-email-err');
+      slot.textContent = `Did you mean ${guess}? Please check your address so I can reply. Press send again if it is correct.`;
+      form.elements.email.setAttribute('aria-invalid', 'true');
+      form.elements.email.focus();
+      status.textContent = 'Please check your email address.';
       return;
     }
 

@@ -14,6 +14,7 @@ import {
 } from '../shared/schemas.js';
 import { slugify, readingTime, makeExcerpt, formatDate, toDate, parseCsv, parseLines } from '../shared/utils.js';
 import { esc, list } from '../render/util.js';
+import { suggestEmail } from '../shared/email-check.js';
 import {
   parseVideoLines, formatVideoLines, parseResourceLines, formatResourceLines, parseScreenshotLines, formatScreenshotLines,
   parseChallengeLines, formatChallengeLines, thumbnail,
@@ -343,8 +344,9 @@ async function viewMessages(main) {
   state.messages = msgs;
   main.innerHTML = `<header class="admin__head"><h1>Messages</h1></header>
   ${msgs.length ? `<ul class="rows">${list(msgs, (m) => `<li class="rows__item rows__item--col${m.read ? '' : ' is-unread'}" data-msg="${esc(m.id)}">
-    <div class="msg__top"><strong>${esc(m.name)}</strong> <a href="mailto:${esc(m.email)}">${esc(m.email)}</a> <span class="label">${esc(when(m.createdAt))}</span>${m.read ? '' : ' <span class="pill pill--on">New</span>'}${m.replies?.length ? ' <span class="pill">Replied</span>' : ''}</div>
+    <div class="msg__top"><strong>${esc(m.name)}</strong> <a href="mailto:${esc(m.email)}">${esc(m.email)}</a>${suggestEmail(m.email) ? ` <span class="pill" title="This address may be mistyped">Check address</span>` : ''} <span class="label">${esc(when(m.createdAt))}</span>${m.read ? '' : ' <span class="pill pill--on">New</span>'}${m.replies?.length ? ' <span class="pill">Replied</span>' : ''}</div>
     ${m.subject ? `<p class="rows__sub">${esc(m.subject)}</p>` : ''}
+    ${suggestEmail(m.email) ? `<p class="rows__sub" role="note">This address may be mistyped. Did you mean <strong>${esc(suggestEmail(m.email))}</strong>? A reply to a wrong address will bounce into your Gmail inbox.</p>` : ''}
     <p class="msg__body">${esc(m.message)}</p>
     ${list(m.replies || [], (r) => `<blockquote class="msg__reply"><span class="label">You replied ${esc(formatDate(r.sentAt))}</span><br>${esc(r.text)}</blockquote>`)}
     <div class="table__actions">
