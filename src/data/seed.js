@@ -22,6 +22,10 @@ export function buildSeed() {
         imageUrl: '',
         liveUrl: p.demo || '',
         githubUrl: p.repo || '',
+        // Optional real content (add it in content.js or in the admin dashboard); empty means the section is hidden.
+        screenshots: p.screenshots || [],
+        challenges: p.challenges || [],
+        lessons: p.lessons || [],
         featured: true,
         displayOrder: i + 1,
       },

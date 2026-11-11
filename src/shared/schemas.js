@@ -120,6 +120,8 @@ export const projectSchema = z.object({
   features: z.array(text(1, 200)).max(12).default([]),
   process: z.string().trim().max(2000).default(''),
   challenges: z.array(challengeSchema).max(8, 'Add at most 8 challenges.').default([]),
+  // Short "what I learned" sentences, shown under the challenges on the project page.
+  lessons: z.array(text(1, 300)).max(8, 'Add at most 8 lessons.').default([]),
   liveUrl: url.default(''),
   githubUrl: url.default(''),
   featured: z.boolean().default(false),

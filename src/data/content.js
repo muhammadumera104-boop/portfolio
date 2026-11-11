@@ -91,7 +91,7 @@ export const projects = [
     outcome: 'Practice with inheritance, polymorphism, file handling, and validation in a console application.',
     tech: ['C++17', 'OOP', 'File I/O', 'DBMS concepts'],
     visual: 'edutrack',
-    repo: 'https://github.com/muhammadumera104-boop',
+    repo: '', // put this project's own repository link here once it is public (never the profile page)
     demo: null,
   },
   {
@@ -110,7 +110,7 @@ export const projects = [
     outcome: 'A deeper feel for how heuristics change the amount of work a search does.',
     tech: ['Python 3', 'Dijkstra', 'A*', 'Graph theory'],
     visual: 'pathfinder',
-    repo: 'https://github.com/muhammadumera104-boop',
+    repo: '', // put this project's own repository link here once it is public (never the profile page)
     demo: null,
   },
   {
@@ -130,7 +130,7 @@ export const projects = [
     outcome: 'Comfort with pointers, memory layout, and the cost of fragmentation.',
     tech: ['ANSI C', 'Pointers', 'Memory', 'Data structures'],
     visual: 'heap',
-    repo: 'https://github.com/muhammadumera104-boop',
+    repo: '', // put this project's own repository link here once it is public (never the profile page)
     demo: null,
   },
 ];

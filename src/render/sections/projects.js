@@ -1,6 +1,7 @@
 import { projects, webProjects } from '../../data/content.js';
 import { esc, list, arrow, heading, external } from '../util.js';
 import { projectPath } from '../../shared/seo.js';
+import { repoUrl } from '../../shared/utils.js';
 import { figures, minis } from '../visuals.js';
 
 const captions = {
@@ -52,7 +53,8 @@ const project = (p) => `
         <p>${esc(p.outcome)}</p>
         <ul class="chips chips--inverse" aria-label="Technologies">${list(p.tech, (t) => `<li class="chip">${esc(t)}</li>`)}</ul>
         <div class="project__links">
-          ${external(p.repo, `GitHub profile ${arrow('ne')}`, 'link-arrow')}
+          <a class="link-arrow" href="${esc(projectPath(p.id))}">Case study ${arrow('right')}</a>
+          ${p.repo ? external(p.repo, `Source code ${arrow('ne')}`, 'link-arrow') : '<span class="project__na label">Source code not published</span>'}
           ${p.demo ? external(p.demo, `Live demo ${arrow('ne')}`, 'link-arrow') : '<span class="project__na label">Live demo not published</span>'}
         </div>
       </div>
@@ -65,7 +67,7 @@ const project = (p) => `
 const cardLinks = (p) => `
   ${p.slug ? `<a class="link-arrow" href="${esc(projectPath(p.slug))}">Details ${arrow('right')}</a>` : ''}
   ${p.liveUrl ? external(p.liveUrl, `${p.liveUrl.startsWith('demos/') ? 'Open demo' : 'Live site'} ${arrow('ne')}`, 'link-arrow') : '<span class="project__na label">Live demo not published</span>'}
-  ${p.githubUrl ? external(p.githubUrl, `GitHub ${arrow('ne')}`, 'link-arrow') : ''}`;
+  ${repoUrl(p.githubUrl) ? external(repoUrl(p.githubUrl), `GitHub ${arrow('ne')}`, 'link-arrow') : ''}`;
 
 // `reveal` is false when cards are swapped in after load (the scroll-reveal pass already ran).
 export const moreCard = (p, reveal = true) => `

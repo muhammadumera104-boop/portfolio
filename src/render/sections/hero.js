@@ -25,14 +25,24 @@ const slab = (layer, i) => {
 
 // Round photo beside the name. It is decorative here (the name is right next to it and the About section has the
 // full portrait with its alt text), so it stays out of the heading's accessible text.
+const orbitChips = ['C', 'C++', 'PY', 'JS'];
+
+// The photo sits in a small orbit: a glow behind it, a slowly turning dashed ring and four language chips circling it.
+// Everything around the photo is decorative; scripts/hero-fx.js makes the photo lean toward the cursor.
 const avatar = () =>
   profile.avatar
-    ? `<picture class="hero__avatar"><source srcset="${esc(profile.avatar.replace(/.(jpe?g|png)$/i, '.webp'))}" type="image/webp"><img src="${esc(profile.avatar)}" alt="" width="88" height="88" fetchpriority="high" decoding="async"></picture>`
+    ? `<span class="hero__orbit" data-orbit aria-hidden="true">
+          <span class="orbit__glow"></span>
+          <span class="orbit__ring"></span>
+          <span class="orbit__spin">${orbitChips.map((c, i) => `<span class="orbit__arm" style="--a:${i * 90}deg"><span class="orbit__chip">${esc(c)}</span></span>`).join('')}</span>
+          <span class="orbit__tilt"><picture class="hero__avatar"><source srcset="${esc(profile.avatar.replace(/.(jpe?g|png)$/i, '.webp'))}" type="image/webp"><img src="${esc(profile.avatar)}" alt="" width="88" height="88" fetchpriority="high" decoding="async"></picture></span>
+        </span>`
     : '';
 
 export const hero = () => `
 <section class="hero" id="home" aria-labelledby="hero-title">
   <div class="hero__columns" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  <div class="hero__spot" aria-hidden="true"></div>
   <div class="container hero__inner">
     <div class="hero__meta" data-hero-fade>
       <p class="label">Student portfolio</p>

@@ -8,11 +8,12 @@ import { skillRows } from '../render/sections/about.js';
 import { moreProjectsInner } from '../render/sections/projects.js';
 import { timelineRows, recognitionItems } from '../render/sections/closing.js';
 import { esc, list, arrow, external } from '../render/util.js';
+import { repoUrl } from '../shared/utils.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 
 function links(p) {
-  const repo = p.githubUrl ? external(p.githubUrl, `GitHub ${arrow('ne')}`, 'link-arrow') : '';
+  const repo = repoUrl(p.githubUrl) ? external(repoUrl(p.githubUrl), `GitHub ${arrow('ne')}`, 'link-arrow') : '';
   const demo = p.liveUrl
     ? external(p.liveUrl, `Live demo ${arrow('ne')}`, 'link-arrow')
     : '<span class="project__na label">Live demo not published</span>';

@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { hero } from '../src/render/sections/hero.js';
 import { profile } from '../src/data/content.js';
+import { leanOffset } from '../src/scripts/hero-fx-math.js';
 
 describe('hero photo', () => {
   const html = hero();
@@ -20,6 +21,20 @@ describe('hero photo', () => {
     expect(h1).toContain('alt=""');
     expect(h1).toContain(profile.name);
     expect(h1).toContain('Also known as Umer Lakhani');
+  });
+  it('wraps the photo in a decorative orbit: glow, ring and four language chips, hidden from screen readers', () => {
+    expect(html).toMatch(/<span class="hero__orbit" data-orbit aria-hidden="true">/);
+    expect(html.match(/class="orbit__chip"/g)).toHaveLength(4);
+    expect(html).toContain('class="hero__spot"');
+  });
+  it('the photo leans toward the cursor by a small, capped amount', () => {
+    expect(leanOffset(0, 0)).toEqual({ dx: 0, dy: 0 });
+    const near = leanOffset(80, 0);
+    expect(near.dx).toBeGreaterThan(0);
+    expect(near.dy).toBe(0);
+    const far = leanOffset(5000, 5000);
+    expect(Math.hypot(far.dx, far.dy)).toBeCloseTo(7, 5);
+    expect(leanOffset(-100, 0).dx).toBeLessThan(0);
   });
   it('the avatar files exist in public/', () => {
     for (const ext of ['jpg', 'webp']) expect(existsSync(resolve(import.meta.dirname, `../public/images/umer-avatar.${ext}`))).toBe(true);

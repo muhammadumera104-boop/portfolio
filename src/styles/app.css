@@ -903,6 +903,12 @@ a.filter {
   letter-spacing: -0.02em;
 }
 
+.project-page__h3 {
+  margin: var(--s-5) 0 var(--s-3);
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
 .project-page__block p {
   margin: 0 0 var(--s-3);
 }

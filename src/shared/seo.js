@@ -1,6 +1,7 @@
 // Pure SEO helpers shared by the build (prerendered pages, sitemap) and the browser (dynamic pages).
 import { optimizeImage } from './cloudinary.js';
 import { normalizeVideos, normalizeResources } from './media.js';
+import { repoUrl } from './utils.js';
 
 export const SITE = {
   name: 'Muhammad Umer Rizwan',
@@ -78,7 +79,7 @@ export function projectJsonLd({ siteUrl, project, description }) {
   const url = absoluteUrl(siteUrl, projectPath(project.slug));
   const live = project.liveUrl ? absoluteUrl(siteUrl, rootPath(project.liveUrl)) : '';
   const image = project.imageUrl ? socialImage(siteUrl, project.imageUrl) : undefined;
-  const sameAs = [project.githubUrl].filter(Boolean);
+  const sameAs = [repoUrl(project.githubUrl)].filter(Boolean);
   const shared = {
     '@id': `${url}#project`,
     name: project.title,

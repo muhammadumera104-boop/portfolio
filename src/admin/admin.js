@@ -244,6 +244,7 @@ const CRUD = {
       ['summary', 'Summary', 'textarea'], ['problem', 'Problem', 'textarea'], ['details', 'Implementation details (one per line)', 'lines'],
       ['features', 'Key features (one per line)', 'lines'], ['process', 'Development process', 'textarea'],
       ['challenges', 'Challenges and solutions (one per line: challenge | solution)', 'pairs'],
+      ['lessons', 'What I learned (one lesson per line)', 'lines'],
       ['outcome', 'Outcome', 'textarea'], ['techStack', 'Tech stack (comma separated)', 'csv'], ['imageUrl', 'Thumbnail image URL', 'text'],
       ['screenshots', 'Screenshots (one per line: image link | alt text describing it)', 'shots'], ['demoVideo', 'Demo video link (YouTube, Vimeo or an https video file)', 'text'],
       ['liveUrl', 'Live URL', 'text'], ['githubUrl', 'GitHub URL', 'text'], ['featured', 'Featured', 'check'], ['displayOrder', 'Display order', 'number'],

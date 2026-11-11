@@ -6,6 +6,7 @@ import { videoGuidesHtml } from './blog.js';
 import { optimizeImage } from '../shared/cloudinary.js';
 import { normalizeVideos } from '../shared/media.js';
 import { projectPath, rootPath } from '../shared/seo.js';
+import { repoUrl } from '../shared/utils.js';
 
 const SHOT_WIDTHS = { thumb: 800, full: 1600 };
 
@@ -22,6 +23,18 @@ const screenshotsHtml = (shots) =>
       })}</ul>`
     : '';
 
+// "Challenges and lessons": the problems I hit with how I solved them, then a short list of what I learned.
+// Either part may be empty; if both are, the whole section is left out (block() returns '' for empty content).
+const challengesHtml = (p) => {
+  const challenges = p.challenges?.length
+    ? `<dl class="challenges">${list(p.challenges, (c) => `<div class="challenges__item"><dt>${esc(c.challenge)}</dt><dd>${esc(c.solution)}</dd></div>`)}</dl>`
+    : '';
+  const lessons = p.lessons?.length
+    ? `<h3 class="project-page__h3">What I learned</h3><ul class="project-page__list">${list(p.lessons, (l) => `<li>${esc(l)}</li>`)}</ul>`
+    : '';
+  return challenges + lessons;
+};
+
 /** @param {object} p a project (static data or a Firestore document); @param {object[]} others projects to link to */
 export function projectPageHtml(p, { others = [] } = {}) {
   const live = p.liveUrl ? demoHref(p.liveUrl) : '';
@@ -37,7 +50,7 @@ export function projectPageHtml(p, { others = [] } = {}) {
     <p class="project-page__summary">${esc(p.summary)}</p>
     <div class="project-page__links">
       ${live ? external(live, `${isLocalDemo(p.liveUrl) ? 'Open the demo' : 'Visit the live site'} ${arrow('ne')}`, 'btn btn--ink') : ''}
-      ${p.githubUrl ? external(p.githubUrl, `View on GitHub ${arrow('ne')}`, 'btn btn--line') : ''}
+      ${repoUrl(p.githubUrl) ? external(repoUrl(p.githubUrl), `View source on GitHub ${arrow('ne')}`, 'btn btn--line') : ''}
       ${!live ? '<span class="project__na label">Live demo not published</span>' : ''}
     </div>
   </header>
@@ -46,7 +59,7 @@ export function projectPageHtml(p, { others = [] } = {}) {
     ${block('pp-problem', 'The problem', p.problem ? `<p>${esc(p.problem)}</p>` : '')}
     ${block('pp-features', 'Key features', p.features?.length ? `<ul class="project-page__list">${list(p.features, (f) => `<li>${esc(f)}</li>`)}</ul>` : '')}
     ${block('pp-process', 'Development process', p.process ? `<p>${esc(p.process).replace(/\n{2,}/g, '</p><p>')}</p>` : '')}
-    ${block('pp-challenges', 'Challenges and solutions', p.challenges?.length ? `<dl class="challenges">${list(p.challenges, (c) => `<div class="challenges__item"><dt>${esc(c.challenge)}</dt><dd>${esc(c.solution)}</dd></div>`)}</dl>` : '')}
+    ${block('pp-challenges', 'Challenges and lessons', challengesHtml(p))}
     ${block('pp-impl', 'How it is built', p.details?.length ? `<ul class="project-page__list">${list(p.details, (d) => `<li>${esc(d)}</li>`)}</ul>` : '')}
     ${block('pp-shots', 'Screenshots', screenshotsHtml(p.screenshots))}
     ${block('pp-outcome', 'Outcome', p.outcome ? `<p>${esc(p.outcome)}</p>` : '')}

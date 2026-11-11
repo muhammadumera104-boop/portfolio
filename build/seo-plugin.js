@@ -15,6 +15,7 @@ import { SITE, absoluteUrl, blogJsonLd, homeJsonLd, postJsonLd, postPath, projec
 import { isCloudinaryUrl } from '../src/shared/cloudinary.js';
 import { builtInPosts, withBuiltInDefaults } from '../src/data/posts.js';
 import { projects as builtInProjects, webProjects, withBuiltInProjectDefaults, introVideo } from '../src/data/content.js';
+import { buildSeed } from '../src/data/seed.js';
 import { makeExcerpt, newestFirst, relatedPosts, toDate } from '../src/shared/utils.js';
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -91,16 +92,22 @@ export function seoPlugin() {
   function collectProjects() {
     projectsOnce ||= (async () => {
       const projectId = env.VITE_FIREBASE_PROJECT_ID;
-      const known = new Set(builtInProjects.map((b) => b.id)); // the three case studies live on the home page itself
+      const known = new Set(builtInProjects.map((b) => b.id));
+      // The three case studies also get their own page. They start from the built-in data (src/data/content.js) and
+      // anything saved in the dashboard (Firestore) wins, so editing them there needs no code change.
+      const caseStudies = buildSeed().projects.filter((p) => known.has(p.id)).map((p) => ({ ...p.data, id: p.id }));
       let live = [];
+      let fromDb = [];
       if (projectId) {
         try {
-          live = (await fetchProjects(projectId)).filter((p) => !known.has(p.slug)).map(withBuiltInProjectDefaults);
+          fromDb = await fetchProjects(projectId);
+          live = fromDb.filter((p) => !known.has(p.slug)).map(withBuiltInProjectDefaults);
         } catch (error) {
           console.warn(`[seo] could not read projects from Firestore (${error.message}); using the built-in projects.`);
         }
       }
-      const source = live.length ? live : webProjects.map((p) => ({ ...p, id: p.slug }));
+      const mergedCaseStudies = caseStudies.map((c) => ({ ...c, ...(fromDb.find((p) => p.slug === c.slug) || {}) }));
+      const source = [...mergedCaseStudies, ...(live.length ? live : webProjects.map((p) => ({ ...p, id: p.slug })))];
       const valid = source.filter((p) => {
         const ok = SLUG.test(String(p.slug || '')) && p.title && p.summary;
         if (!ok) console.warn(`[seo] skipping a project without a valid slug/title/summary: ${p.slug}`);

@@ -105,6 +105,161 @@
   gap: var(--s-1);
 }
 
+/* Orbit around the photo: glow, turning ring, circling language chips, and a lean toward the cursor. */
+.hero__orbit {
+  --ox: 0px;
+  --oy: 0px;
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 8.5rem;
+  height: 8.5rem;
+  margin-left: -1.5rem; /* the orbit is wider than the photo; pull it back so the photo stays on the grid line */
+}
+
+.hero__orbit > * {
+  grid-area: 1 / 1;
+}
+
+.orbit__glow {
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--vermilion) 38%, transparent), transparent 68%);
+  filter: blur(6px);
+  animation: orbit-breathe 4.5s ease-in-out infinite alternate;
+}
+
+.orbit__ring {
+  width: 7.4rem;
+  height: 7.4rem;
+  border: 1px dashed color-mix(in srgb, var(--vermilion) 55%, transparent);
+  border-radius: 50%;
+  animation: orbit-turn 40s linear infinite reverse;
+}
+
+.orbit__spin {
+  position: relative;
+  width: 8.2rem;
+  height: 8.2rem;
+  animation: orbit-turn 22s linear infinite;
+}
+
+.orbit__arm {
+  position: absolute;
+  inset: 0;
+  transform: rotate(var(--a));
+}
+
+.orbit__chip {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  padding-inline: 0.35rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--accent-text);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--fg) 14%, transparent);
+  /* keeps the letters upright while the arm turns */
+  animation: orbit-upright 22s linear infinite;
+}
+
+.orbit__tilt {
+  display: grid;
+  transform: translate(var(--ox), var(--oy));
+  transition: transform 0.25s var(--ease-out, ease-out);
+}
+
+@keyframes orbit-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit-upright {
+  from {
+    rotate: calc(var(--a) * -1);
+  }
+
+  to {
+    rotate: calc(var(--a) * -1 - 360deg);
+  }
+}
+
+@keyframes orbit-breathe {
+  from {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit__glow,
+  .orbit__ring,
+  .orbit__spin,
+  .orbit__chip {
+    animation: none;
+  }
+
+  .orbit__chip {
+    rotate: calc(var(--a) * -1);
+  }
+
+  .orbit__tilt {
+    transition: none;
+  }
+}
+
+/* A soft light under the cursor, only in the hero and only with a mouse. */
+.hero__spot {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 30%), color-mix(in srgb, var(--vermilion) 11%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.hero.is-lit .hero__spot {
+  opacity: 1;
+}
+
+/* Click ripple (drawn by scripts/hero-fx.js) */
+.fx-ripple {
+  position: fixed;
+  z-index: 60;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid var(--vermilion);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: fx-ripple 0.7s ease-out forwards;
+}
+
+@keyframes fx-ripple {
+  to {
+    opacity: 0;
+    transform: scale(7);
+  }
+}
+
 .hero__aka {
   color: var(--fg-muted);
   font-weight: 500;
@@ -115,6 +270,28 @@
   .hero__avatar {
     width: 4.25rem;
     height: 4.25rem;
+  }
+
+  /* smaller orbit, and no pull to the left, so the chips never leave the screen */
+  .hero__orbit {
+    width: 6.6rem;
+    height: 6.6rem;
+    margin-left: 0;
+  }
+
+  .orbit__glow {
+    width: 5.6rem;
+    height: 5.6rem;
+  }
+
+  .orbit__ring {
+    width: 5.8rem;
+    height: 5.8rem;
+  }
+
+  .orbit__spin {
+    width: 6.3rem;
+    height: 6.3rem;
   }
 }
 
@@ -1593,6 +1770,11 @@
 
 /* ───────────────────────── Learning journey ───────────────────────── */
 
+.journey {
+  --journey-blue: #4aa8ff;
+  --journey-orange: #ff8a3d;
+}
+
 .journey__intro {
   max-width: var(--measure);
   margin: 0 0 var(--s-7);
@@ -1605,7 +1787,7 @@
   padding-bottom: var(--s-4);
 }
 
-/* The lightning is drawn in this SVG by scripts/journey.js; it sits behind the nodes and cards. */
+/* The beam is drawn in this SVG by scripts/journey.js; it sits behind the dots and cards. */
 .journey__svg {
   position: absolute;
   inset: 0;
@@ -1615,47 +1797,79 @@
   pointer-events: none;
 }
 
-.journey__wire {
-  fill: none;
-  stroke: color-mix(in srgb, var(--fg) 24%, transparent);
-  stroke-width: 2;
-  stroke-dasharray: 2 8;
+.journey__rail {
+  stroke: color-mix(in srgb, var(--fg) 18%, transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 7;
 }
 
-.journey__glow {
-  fill: none;
-  stroke: var(--vermilion);
-  stroke-width: 9;
+.journey__line {
+  stroke: var(--journey-orange);
   stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.35;
-  filter: blur(6px);
 }
 
-.journey__bolt {
-  fill: none;
-  stroke: #fff4b8;
+.journey__line--main {
   stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  filter: drop-shadow(0 0 3px #ffd84a) drop-shadow(0 0 9px var(--vermilion));
+  opacity: 0.95;
 }
 
-.journey__spark {
-  fill: #fff;
-  opacity: 0;
-  filter: drop-shadow(0 0 6px #ffd84a) drop-shadow(0 0 16px var(--vermilion));
+/* Two fainter companion lines whose dashes slowly flow along the beam. */
+.journey__line--side {
+  stroke-width: 1;
+  stroke-dasharray: 10 14;
+  opacity: 0.4;
+  animation: journey-flow 3.2s linear infinite;
 }
 
-.journey__forks path {
-  fill: none;
-  stroke: #ffe27a;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  filter: drop-shadow(0 0 4px var(--vermilion));
+.journey__line--side:last-of-type {
+  animation-duration: 4.6s;
+  animation-direction: reverse;
+}
+
+@keyframes journey-flow {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+/* Soft clouds of light that drift around the head of the beam. */
+.journey__cloud {
+  fill: var(--journey-orange);
+  opacity: 0.2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: journey-drift 7s ease-in-out infinite alternate;
+}
+
+.journey__cloud--2 {
+  opacity: 0.15;
+  animation-duration: 9s;
+  animation-delay: -3s;
+}
+
+.journey__cloud--3 {
+  opacity: 0.24;
+  animation-duration: 6s;
+  animation-delay: -1.5s;
+}
+
+@keyframes journey-drift {
+  from {
+    transform: translateX(-7px) scale(0.9);
+  }
+
+  to {
+    transform: translateX(9px) scale(1.12);
+  }
+}
+
+.journey__halo {
+  fill: var(--journey-orange);
+  opacity: 0.4;
+}
+
+.journey__tip {
+  fill: #fff1de;
 }
 
 .journey__steps {
@@ -1673,6 +1887,7 @@
   align-items: start;
 }
 
+/* The blue dots the beam sticks to. */
 .journey__node {
   position: relative;
   z-index: 2;
@@ -1680,23 +1895,30 @@
   width: 1rem;
   height: 1rem;
   margin: 1.6rem auto 0;
-  border: 2px solid color-mix(in srgb, var(--fg) 40%, transparent);
+  border: 2px solid color-mix(in srgb, var(--journey-blue) 50%, transparent);
   border-radius: 50%;
   background: var(--bg);
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .journey__step.is-lit .journey__node {
-  border-color: #fff4b8;
-  background: var(--vermilion);
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--vermilion) 28%, transparent), 0 0 20px var(--vermilion);
-  animation: journey-zap 0.7s ease-out;
+  border-color: #c4e2ff;
+  background: var(--journey-blue);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--journey-blue) 24%, transparent);
 }
 
-@keyframes journey-zap {
-  0% { transform: scale(0.6); box-shadow: 0 0 0 0 #ffd84a, 0 0 0 var(--vermilion); }
-  40% { transform: scale(1.7); box-shadow: 0 0 0 10px color-mix(in srgb, #ffd84a 40%, transparent), 0 0 34px #ffd84a; }
-  100% { transform: scale(1); }
+.journey__step.is-active .journey__node {
+  animation: journey-pulse 2.2s ease-out infinite;
+}
+
+@keyframes journey-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--journey-blue) 60%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 16px transparent;
+  }
 }
 
 .journey__card {
@@ -1711,22 +1933,36 @@
 }
 
 .journey__step.is-lit .journey__card {
-  border-color: color-mix(in srgb, var(--vermilion) 65%, transparent);
+  border-color: color-mix(in srgb, var(--journey-orange) 35%, transparent);
   opacity: 1;
   transform: none;
 }
 
-/* Without JavaScript, or with reduced motion, everything is simply shown. */
-html:not(.js) .journey__card,
-.journey__track.is-static .journey__card {
+.journey__step.is-active .journey__card {
+  border-color: var(--journey-orange);
+}
+
+/* Without JavaScript, or with reduced motion, everything is simply shown as reached and nothing moves. */
+html:not(.js) .journey__card {
   opacity: 1;
   transform: none;
 }
 
-html:not(.js) .journey__node,
-.journey__track.is-static .journey__node {
-  border-color: #fff4b8;
-  background: var(--vermilion);
+html:not(.js) .journey__node {
+  border-color: #c4e2ff;
+  background: var(--journey-blue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey__line--side,
+  .journey__cloud,
+  .journey__step.is-active .journey__node {
+    animation: none;
+  }
+
+  .journey__card {
+    transition: none;
+  }
 }
 
 .journey__when {
@@ -1741,7 +1977,7 @@ html:not(.js) .journey__node,
 .journey__now {
   padding: 0.1em 0.6em;
   border-radius: 999px;
-  background: var(--vermilion);
+  background: var(--journey-blue);
   color: var(--ink);
   font-size: 0.8em;
 }

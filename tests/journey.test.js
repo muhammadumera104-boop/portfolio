@@ -1,53 +1,54 @@
 import { describe, it, expect } from 'vitest';
-import { boltPoints, forkPoints, toPath, progressFor, seeded } from '../src/scripts/journey-path.js';
+import { activeIndex, approach, beamTarget, lineOffsets, clamp } from '../src/scripts/journey-path.js';
 import { journeySection } from '../src/render/sections/journey.js';
 import { journey, nav, education } from '../src/data/content.js';
 
-describe('lightning geometry', () => {
-  const options = { height: 900, nodeX: 32, nodeYs: [40, 220, 400, 610, 800] };
-  const points = boltPoints(options);
+describe('journey beam: sticks to the dot of the step you have reached', () => {
+  const nodeYs = [100, 400, 700, 1000];
 
-  it('runs from the top of the track to the bottom, top to bottom in order', () => {
-    expect(points[0].y).toBe(0);
-    expect(points.at(-1).y).toBe(900);
-    for (let i = 1; i < points.length; i += 1) expect(points[i].y).toBeGreaterThan(points[i - 1].y);
+  it('waits at the top until the first dot reaches the reading line', () => {
+    expect(activeIndex(nodeYs, 50)).toBe(-1);
+    expect(beamTarget(nodeYs, -1)).toBe(0);
   });
-  it('passes exactly through the centre of every step node', () => {
-    for (const y of options.nodeYs) expect(points.find((p) => p.y === y).x).toBe(32);
+  it('holds each dot while the reading line is between it and the next one', () => {
+    expect(activeIndex(nodeYs, 100)).toBe(0);
+    expect(activeIndex(nodeYs, 399)).toBe(0);
+    expect(activeIndex(nodeYs, 400)).toBe(1);
+    expect(activeIndex(nodeYs, 850)).toBe(2);
   });
-  it('zig-zags between the nodes but stays inside the gutter', () => {
-    const between = points.filter((p) => !options.nodeYs.includes(p.y) && p.y !== 0 && p.y !== 900);
-    expect(between.length).toBeGreaterThan(10);
-    expect(between.some((p) => p.x !== 32)).toBe(true);
-    for (const p of between) expect(Math.abs(p.x - 32)).toBeLessThanOrEqual(9);
+  it('stays on the last dot once the end is reached, and goes back when scrolling up', () => {
+    expect(activeIndex(nodeYs, 5000)).toBe(3);
+    expect(activeIndex(nodeYs, 450)).toBe(1);
   });
-  it('is the same bolt every time (deterministic) and different for another seed', () => {
-    expect(boltPoints(options)).toEqual(points);
-    expect(boltPoints({ ...options, seed: 99 })).not.toEqual(points);
+  it('the beam ends exactly on the centre of the active dot', () => {
+    nodeYs.forEach((y, i) => expect(beamTarget(nodeYs, i)).toBe(y));
   });
-  it('seeded numbers are between 0 and 1', () => {
-    const random = seeded(5);
-    for (let i = 0; i < 200; i += 1) {
-      const v = random();
-      expect(v).toBeGreaterThanOrEqual(0);
-      expect(v).toBeLessThan(1);
+  it('moves toward the next dot a little each frame, and does not move when it is already there (it stops)', () => {
+    let y = 100;
+    const target = 400;
+    const seen = [];
+    for (let i = 0; i < 200 && y !== target; i += 1) {
+      const next = approach(y, target);
+      expect(next).toBeGreaterThan(y);
+      expect(next).toBeLessThanOrEqual(target);
+      seen.push(next);
+      y = next;
     }
+    expect(y).toBe(target); // lands exactly, never overshoots
+    expect(seen.length).toBeLessThan(120); // and arrives within about two seconds at 60 frames per second
+    expect(approach(target, target)).toBe(target);
   });
-  it('a fork starts on the bolt and leans the way it is told to', () => {
-    const right = forkPoints({ x: 32, y: 100, direction: 1 });
-    const left = forkPoints({ x: 32, y: 100, direction: -1 });
-    expect(right[0]).toEqual({ x: 32, y: 100 });
-    expect(right.at(-1).x).toBeGreaterThan(32);
-    expect(left.at(-1).x).toBeLessThan(32);
-    expect(right.at(-1).y).toBeGreaterThan(100);
+  it('also eases back up when the target is above', () => {
+    expect(approach(400, 100)).toBeLessThan(400);
   });
-  it('turns points into SVG path data', () => {
-    expect(toPath([{ x: 1, y: 2 }, { x: 3.14159, y: 4 }])).toBe('M1.0 2.0 L3.1 4.0');
+  it('is a straight line: three parallel lines, the main beam in the middle', () => {
+    expect(lineOffsets(7)).toEqual([-7, 0, 7]);
+    expect(lineOffsets()).toHaveLength(3);
   });
-  it('progress is 0 before the track reaches the reading line and 1 once it has passed', () => {
-    expect(progressFor({ top: 800, height: 1000, anchor: 500 })).toBe(0);
-    expect(progressFor({ top: 0, height: 1000, anchor: 500 })).toBe(0.5);
-    expect(progressFor({ top: -2000, height: 1000, anchor: 500 })).toBe(1);
+  it('clamps values', () => {
+    expect(clamp(5)).toBe(1);
+    expect(clamp(-1)).toBe(0);
+    expect(clamp(0.4)).toBe(0.4);
   });
 });
 
@@ -60,7 +61,7 @@ describe('journey section', () => {
     expect(html.match(/<h3 class="journey__title">/g)).toHaveLength(journey.length);
     expect(html).toContain('<ol class="journey__steps">');
   });
-  it('has a single h2, keeps the lightning svg decorative, and marks the step being learned now', () => {
+  it('has a single h2, keeps the beam svg decorative, and marks the step being learned now', () => {
     expect(html.match(/<h2/g)).toHaveLength(1);
     expect(html).toContain('class="journey__svg" aria-hidden="true"');
     expect(html.match(/Learning now/g)).toHaveLength(1);
@@ -69,9 +70,10 @@ describe('journey section', () => {
   it('uses the university name GU TECH and the real education dates', () => {
     expect(html).toContain('BSCS at GU TECH');
     expect(html).not.toContain('GU Tech');
-    for (const e of education) expect(journey.some((s) => s.title.startsWith(e.title.split(' ')[0]) || s.when.includes(e.period.replace(' — ', ' — ')))).toBe(true);
+    for (const e of education) expect(journey.some((s) => s.title.startsWith(e.title.split(' ')[0]) || s.when.includes(e.period))).toBe(true);
   });
-  it('escapes text and has a nav item pointing at it', () => {
+  it('says the light stops at each step, escapes text, and has a nav item pointing at it', () => {
+    expect(html).toContain('stops at each step');
     expect(html).not.toMatch(/<script/i);
     expect(nav.some((n) => n.href === '#journey')).toBe(true);
   });
@@ -88,7 +90,7 @@ describe('introduction video section', () => {
     expect(html.match(/<li>/g)).toHaveLength(introVideo.transcript.length);
     expect(html).toContain('Read the transcript');
   });
-  it('uses the university name GU TECH in the narration and says nothing that is not on the site', async () => {
+  it('uses the university name GU TECH in the narration', async () => {
     const { introVideo } = await import('../src/data/content.js');
     const all = introVideo.transcript.join(' ');
     expect(all).toContain('GU TECH');

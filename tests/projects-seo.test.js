@@ -28,7 +28,7 @@ describe('projectPageHtml', () => {
 
   it('has one h1 and every section the brief asks for', () => {
     expect(html.match(/<h1/g)).toHaveLength(1);
-    for (const heading of ['The problem', 'Key features', 'Development process', 'Challenges and solutions', 'How it is built', 'Screenshots', 'Outcome', 'Technologies', 'Demo video', 'More projects']) {
+    for (const heading of ['The problem', 'Key features', 'Development process', 'Challenges and lessons', 'How it is built', 'Screenshots', 'Outcome', 'Technologies', 'Demo video', 'More projects']) {
       expect(html, heading).toContain(heading);
     }
   });
@@ -57,7 +57,7 @@ describe('projectPageHtml', () => {
   });
   it('leaves out sections that have no content instead of showing placeholders', () => {
     const bare = projectPageHtml({ slug: 'bare', title: 'Bare', summary: 'Just a summary.' });
-    for (const heading of ['Key features', 'Development process', 'Challenges and solutions', 'Screenshots', 'Outcome', 'Demo video', 'More projects', 'The problem']) {
+    for (const heading of ['Key features', 'Development process', 'Challenges and lessons', 'Screenshots', 'Outcome', 'Demo video', 'More projects', 'The problem']) {
       expect(bare, heading).not.toContain(heading);
     }
     expect(bare).toContain('Live demo not published');

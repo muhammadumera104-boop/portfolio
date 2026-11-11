@@ -109,3 +109,18 @@ export function parseLines(text) {
     .map((line) => line.trim())
     .filter(Boolean);
 }
+
+/**
+ * Returns the address only when it points at one repository (github.com/<user>/<repo>), and '' otherwise.
+ * A link to just a profile (github.com/<user>) is not a project's source code, so it is never shown as one.
+ */
+export function repoUrl(value) {
+  try {
+    const url = new URL(String(value ?? '').trim());
+    if (url.protocol !== 'https:') return '';
+    const parts = url.pathname.split('/').filter(Boolean);
+    return parts.length >= 2 ? url.href : '';
+  } catch {
+    return '';
+  }
+}
