@@ -16,6 +16,8 @@ export const profile = {
   // Set to a file in public/images (e.g. 'images/umer-rizwan.jpg') to show a portrait in About.
   portrait: 'images/umer-rizwan.jpg',
   portraitAlt: 'Portrait of Muhammad Umer Rizwan',
+  // Small square crop of the portrait, shown as a round photo beside the name in the hero.
+  avatar: 'images/umer-avatar.jpg',
   // Currently-exploring words that rotate in the hero.
   exploring: ['full-stack development', 'automation & software tools', 'AI agents', '3D modelling'],
 };

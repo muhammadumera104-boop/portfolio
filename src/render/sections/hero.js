@@ -23,6 +23,13 @@ const slab = (layer, i) => {
     </g>`;
 };
 
+// Round photo beside the name. It is decorative here (the name is right next to it and the About section has the
+// full portrait with its alt text), so it stays out of the heading's accessible text.
+const avatar = () =>
+  profile.avatar
+    ? `<picture class="hero__avatar"><source srcset="${esc(profile.avatar.replace(/.(jpe?g|png)$/i, '.webp'))}" type="image/webp"><img src="${esc(profile.avatar)}" alt="" width="88" height="88" fetchpriority="high" decoding="async"></picture>`
+    : '';
+
 export const hero = () => `
 <section class="hero" id="home" aria-labelledby="hero-title">
   <div class="hero__columns" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
@@ -35,7 +42,13 @@ export const hero = () => `
     </div>
 
     <h1 class="hero__title" id="hero-title">
-      <span class="hero__name" data-hero-fade>${esc(profile.name)}<span class="sr-only"> — </span></span>
+      <span class="hero__name" data-hero-fade>
+        ${avatar()}
+        <span class="hero__name-text">
+          <span class="hero__name-main">${esc(profile.name)}<span class="sr-only"> — </span></span>
+          ${profile.alsoKnownAs ? `<span class="hero__aka label">Also known as ${esc(profile.alsoKnownAs)}<span class="sr-only"> — </span></span>` : ''}
+        </span>
+      </span>
       <span class="hero__line hero__line--1"><span class="line"><span class="line__inner" data-hero-line>Software,</span></span></span>
       <span class="hero__line hero__line--2">
         <span class="line hero__serif"><span class="line__inner" data-hero-line><em>from the</em></span></span>
