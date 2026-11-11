@@ -1,6 +1,8 @@
 # M. Umer — Portfolio
 
-Personal portfolio of **Muhammad Umer Rizwan**, BSCS student at GU Tech, Karachi.
+Personal portfolio of **Muhammad Umer Rizwan** (also known as Umer Lakhani), BSCS student at GU Tech, Karachi.
+
+**Live site: [muhammad-umer-portfolio-rouge.vercel.app](https://muhammad-umer-portfolio-rouge.vercel.app/)** · [Blog](https://muhammad-umer-portfolio-rouge.vercel.app/blog/) · [Projects](https://muhammad-umer-portfolio-rouge.vercel.app/#projects)
 
 A static site built with plain HTML, CSS and JavaScript, using [Vite](https://vite.dev) for the dev server and build. All of the content is rendered into the HTML at build time, so the page works and can be indexed without JavaScript.
 
