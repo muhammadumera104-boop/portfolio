@@ -224,7 +224,7 @@
 
 .section-head__title {
   font-size: var(--fs-display);
-  font-weight: 600;
+  font-weight: var(--fw-display);
   line-height: var(--lh-tight);
   letter-spacing: var(--tracking-display);
   max-width: 14ch;
@@ -291,9 +291,9 @@
   margin: 0 0 -0.2em;
   padding-inline: calc(var(--gutter) * 0.5);
   font-size: clamp(5rem, 24.5vw, 26rem);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 0.9;
-  letter-spacing: -0.07em;
+  letter-spacing: -0.055em;
   white-space: nowrap;
   text-align: center;
   user-select: none;

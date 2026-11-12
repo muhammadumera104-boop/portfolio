@@ -63,7 +63,7 @@
   align-self: center;
   padding-block: var(--s-6);
   font-size: var(--fs-hero);
-  font-weight: 620;
+  font-weight: var(--fw-display);
   line-height: var(--lh-tight);
   letter-spacing: var(--tracking-display);
 }

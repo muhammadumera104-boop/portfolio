@@ -73,7 +73,7 @@ body {
   max-width: 16ch;
   margin: var(--s-3) 0 var(--s-4);
   font-size: var(--fs-display);
-  font-weight: 600;
+  font-weight: var(--fw-display);
   line-height: var(--lh-tight);
   letter-spacing: var(--tracking-display);
 }

@@ -4,16 +4,16 @@
 
 :root {
   /* Palette */
-  --paper: #f4f1ea;
-  --paper-2: #ebe6dc;
-  --ink: #111111;
+  --paper: #f6f3ec;
+  --paper-2: #ece8de;
+  --ink: #14130f;
   --charcoal: #242424;
-  --stone: #6b665f;        /* muted text on paper, 5.0:1 */
+  --stone: #6a655d;        /* muted text on paper, 5.1:1 */
   --stone-dark: #a39e95;   /* muted text on ink, 6.9:1 */
-  --rule-light: #d8d3ca;
+  --rule-light: #ddd8ce;
   --rule-dark: #2f2d2a;
-  --vermilion: #f0442e;    /* accent: fills, large text, indicators */
-  --vermilion-ink: #c2341f;/* accent for small text on paper, 4.9:1 */
+  --vermilion: #e0492f;    /* accent: fills, large text, indicators (softened from #f0442e) */
+  --vermilion-ink: #b8351e;/* accent for small text on paper, 5.4:1 */
 
   /* Semantic colours (light theme) */
   --bg: var(--paper);
@@ -42,8 +42,8 @@
   --font-serif: 'Instrument Serif', 'Times New Roman', serif;
   --font-mono: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, Consolas, monospace;
 
-  --fs-hero: clamp(3.4rem, 12.6vw, 12.5rem);
-  --fs-display: clamp(2.6rem, 7.4vw, 7rem);
+  --fs-hero: clamp(3.2rem, 11.4vw, 11.25rem);
+  --fs-display: clamp(2.5rem, 6.6vw, 6.25rem);
   --fs-title: clamp(2rem, 4.6vw, 4.25rem);
   --fs-h3: clamp(1.25rem, 1.6vw, 1.5rem);
   --fs-lead: clamp(1.3rem, 2.3vw, 2.1rem);
@@ -51,13 +51,14 @@
   --fs-small: 0.875rem;
   --fs-label: 0.75rem;
 
-  --lh-tight: 0.9;
+  --lh-tight: 1;
+  --fw-display: 500;
   --lh-snug: 1.15;
   --lh-body: 1.6;
 
-  --tracking-display: -0.055em;
-  --tracking-title: -0.035em;
-  --tracking-label: 0.08em;
+  --tracking-display: -0.04em;
+  --tracking-title: -0.028em;
+  --tracking-label: 0.1em;
 
   /* Spacing (4px base) */
   --s-1: 0.25rem;
@@ -79,9 +80,9 @@
 
   /* Shape */
   --radius-s: 4px;
-  --radius-m: 10px;
+  --radius-m: 12px;
   --radius-pill: 999px;
-  --shadow: 0 1px 0 rgb(0 0 0 / 0.04), 0 18px 40px -24px rgb(0 0 0 / 0.35);
+  --shadow: 0 1px 2px rgb(20 19 15 / 0.04), 0 24px 48px -28px rgb(20 19 15 / 0.28);
 
   /* Motion (mirrored in src/scripts/motion.js) */
   --dur-fast: 180ms;
