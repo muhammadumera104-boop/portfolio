@@ -34,6 +34,8 @@ function apply(theme, persist) {
   window.dispatchEvent(new CustomEvent('themechange', { detail: theme }));
 }
 
+export const getTheme = current;
+export const setTheme = (theme) => apply(theme === 'dark' ? 'dark' : 'light', true);
 export const toggleTheme = () => apply(current() === 'dark' ? 'light' : 'dark', true);
 
 export function initTheme() {

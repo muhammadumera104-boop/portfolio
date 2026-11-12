@@ -492,6 +492,14 @@ export const education = [
   { period: 'Aug 2019 — May 2024', title: 'Matriculation', place: 'Bait-Ul-Ilm Secondary School', text: 'Computer science foundations, programming logic, and procedural C.' },
 ];
 
+// The availability badge in the hero. After the first save in the admin dashboard (Availability tab) the dashboard's
+// version is used instead, so you normally never edit this by hand. open: true shows "Open to internships".
+export const availability = { open: true, text: '' };
+
+// The fixed CV file behind the "Download CV (PDF)" buttons. It lives in public/cv/ and is made by `npm run cv`
+// (see build/make-cv.mjs), which prints the CV page of src/render/cv.js. Run it again after changing the content below.
+export const cv = { file: 'Muhammad-Umer-Rizwan-CV.pdf', path: '/cv/Muhammad-Umer-Rizwan-CV.pdf' };
+
 // The "Now" section: what I am building and learning this month (see render/sections/now.js).
 // This is the starting content. After the first save in the admin dashboard (Now tab) the dashboard's version is used,
 // so you normally never edit this by hand. month is 'YYYY-MM'. At most 5 short lines in each list.

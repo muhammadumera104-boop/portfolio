@@ -2434,3 +2434,8 @@ html:not(.js) .journey__node {
   margin: var(--s-5) 0 0;
   color: var(--fg-muted);
 }
+
+/* Availability badge: the dot goes grey when the owner switches "Open to internships" off in the dashboard. */
+.hero__status.is-closed .status-dot {
+  background: var(--fg-muted);
+}

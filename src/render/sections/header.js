@@ -15,6 +15,11 @@ export const header = (base = '', current = '') => {
       <ul class="site-nav__list">${list(nav, (item) => `<li><a class="site-nav__link" href="${href(item.href)}"${cur(item.href)} data-nav-link>${esc(item.label)}</a></li>`)}</ul>
     </nav>
     <div class="site-header__actions">
+      <button class="icon-btn palette-open" type="button" data-palette-open aria-label="Search the site" aria-keyshortcuts="Control+K Meta+K">
+        <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m13.2 13.2 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <kbd class="palette-open__hint" data-palette-hint aria-hidden="true">Ctrl K</kbd>
+      </button>
+      <button class="icon-btn lang-toggle" type="button" data-lang-toggle aria-label="Switch to Urdu (اردو)"><span data-lang-text lang="ur">اردو</span></button>
       <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark theme">
         <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 3.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg>
       </button>

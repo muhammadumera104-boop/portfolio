@@ -1,0 +1,138 @@
+/* ───────────────────────── Urdu and right-to-left ─────────────────────────
+   Everything here applies only when scripts/lang.js has set lang="ur" dir="rtl" on <html>, so the English page is untouched.
+   Flex and grid layouts mirror by themselves; this file fixes what does not: fonts, spacing on one side, arrows, lines
+   that start from the left, and the letter spacing that would break the joined Arabic-script letters. */
+
+html[lang='ur'] body,
+html[lang='ur'] button,
+html[lang='ur'] input,
+html[lang='ur'] textarea,
+html[lang='ur'] select {
+  font-family: 'Noto Naskh Arabic', 'Segoe UI', 'Urdu Typesetting', 'Jameel Noori Nastaleeq', Tahoma, system-ui, sans-serif;
+}
+
+html[lang='ur'] body {
+  line-height: 1.85;
+}
+
+/* Joined letters must stay joined: no letter spacing, no forced capitals, and roomier lines for the dots and marks. */
+html[dir='rtl'] *,
+html[dir='rtl'] *::before,
+html[dir='rtl'] *::after {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+html[lang='ur'] :is(h1, h2, h3, h4, .hero__title, .section-head__title, .line, .line__inner) {
+  line-height: 1.6;
+}
+
+html[lang='ur'] .line {
+  padding-block: 0.12em; /* the reveal mask clips anything outside the line box */
+}
+
+/* Directional icons (arrows) point the other way. */
+html[dir='rtl'] .icon {
+  transform: scaleX(-1);
+}
+
+/* Lines and bars that grow from the left now grow from the right. */
+html[dir='rtl'] .progress__bar,
+html[dir='rtl'] .site-nav__link::after {
+  transform-origin: right;
+}
+
+html[dir='rtl'] .site-nav__link.is-active::before {
+  right: -0.75rem;
+  left: auto;
+}
+
+/* Spacing that was written for the left side. */
+html[dir='rtl'] .hero__meta .label {
+  padding-right: var(--s-3);
+  padding-left: 0;
+}
+
+html[dir='rtl'] .status-dot {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+html[dir='rtl'] .hero__orbit {
+  margin-right: -1.5rem;
+  margin-left: 0;
+}
+
+html[dir='rtl'] .hero__serif {
+  padding-right: 0.9em;
+  padding-left: 0;
+}
+
+html[dir='rtl'] .prose ul,
+html[dir='rtl'] .prose ol,
+html[dir='rtl'] .project-page__list {
+  padding-right: 1.4em;
+  padding-left: 0;
+}
+
+html[dir='rtl'] .prose blockquote {
+  padding-right: 1.1em;
+  padding-left: 0;
+  border-right: 3px solid var(--accent);
+  border-left: 0;
+}
+
+/* The "Now" arrows point at the text, so they point left. */
+html[dir='rtl'] .now__list li {
+  padding-right: 1.2em;
+  padding-left: 0;
+}
+
+html[dir='rtl'] .now__list li::before {
+  content: '←';
+}
+
+@media (max-width: 560px) {
+  html[dir='rtl'] .hero__orbit {
+    margin-right: 0;
+  }
+}
+
+/* The terminal and the code-like figures keep their English, left-to-right layout. */
+html[dir='rtl'] [data-terminal],
+html[dir='rtl'] .stack,
+html[dir='rtl'] .project__visual,
+html[dir='rtl'] .journey__svg {
+  direction: ltr;
+}
+
+/* The language button shows Urdu letters, so it gets an Urdu-friendly size. */
+.lang-toggle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+html[dir='rtl'] .lang-toggle {
+  font-family: system-ui, sans-serif;
+}
+
+/* Urdu letters are larger and wider than the English display type, so the big headlines are a little smaller. */
+html[lang='ur'] .hero__title {
+  font-size: clamp(2.4rem, 6vw, 5.2rem);
+  font-weight: 700;
+}
+
+html[lang='ur'] .section-head__title {
+  font-size: clamp(2rem, 4.6vw, 3.8rem);
+  font-weight: 700;
+}
+
+html[lang='ur'] .contact__title {
+  font-size: clamp(3.4rem, 10vw, 8.5rem);
+  line-height: 1.35;
+}
+
+html[lang='ur'] .site-footer__wordmark {
+  direction: ltr; /* the "M.Umer" wordmark is a logo, not a sentence */
+}

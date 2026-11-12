@@ -89,8 +89,9 @@ export function initContactForm() {
       // Firestore save is only a backup, used when the server could not save (offline, server error).
       const server = await sendToServer(result.data);
       const emailed = server?.emailed === true;
+      const confirmed = server?.confirmed === true; // the server also sent the visitor an automatic confirmation
       const saved = server?.saved === true || (await saveToInbox(result.data));
-      const outcome = describeOutcome({ saved, emailed }, profile.email);
+      const outcome = describeOutcome({ saved, emailed, confirmed }, profile.email);
       status.textContent = outcome.message;
       status.dataset.state = outcome.kind;
       if (outcome.kind === 'failed') {
@@ -119,7 +120,7 @@ async function saveToInbox(data) {
   }
 }
 
-/** @returns {Promise<{saved: boolean, emailed: boolean} | null>} what the server confirms, or null if it could not be reached */
+/** @returns {Promise<{saved: boolean, emailed: boolean, confirmed: boolean} | null>} what the server confirms, or null if it could not be reached */
 async function sendToServer(data) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
@@ -132,7 +133,7 @@ async function sendToServer(data) {
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) return null;
-    return { saved: body.saved === true, emailed: body.ok === true };
+    return { saved: body.saved === true, emailed: body.ok === true, confirmed: body.confirmed === true };
   } catch (error) {
     console.error('[contact] server', error);
     return null;

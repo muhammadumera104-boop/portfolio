@@ -8,7 +8,8 @@ function initScrollState() {
   const update = () => {
     pending = false;
     const max = document.documentElement.scrollHeight - innerHeight;
-    bar.style.transform = `scaleX(${max > 0 ? Math.min(1, scrollY / max) : 0})`;
+    // On a blog post the bar measures the article instead (see blog/progress.js).
+    if (bar.dataset.mode !== 'article') bar.style.transform = `scaleX(${max > 0 ? Math.min(1, scrollY / max) : 0})`;
     header.classList.toggle('is-scrolled', scrollY > 24);
   };
 

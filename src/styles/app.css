@@ -148,9 +148,20 @@ a.filter {
 }
 
 .blog-tags {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.blog-tags__group {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--s-2);
+}
+
+.blog-tags__group > .label {
+  min-width: 5.5rem;
+  color: var(--fg-muted);
 }
 
 .post-grid {

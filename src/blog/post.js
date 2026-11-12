@@ -12,11 +12,14 @@ import { postJsonLd, jsonLdText, absoluteUrl, postPath, socialImage, snippet } f
 import { articleHtml } from '../render/blog.js';
 import { toast } from '../shared/toast.js';
 import { enhanceVideos } from './videos.js';
+import { initReadingProgress } from './progress.js';
 import { esc, list } from '../render/util.js';
 
 const main = mountShell();
 
 /** /blog/<slug>/ (clean URL) or the older post.html?slug=<slug>. */
+initReadingProgress();
+
 const slug = decodeURIComponent(location.pathname.match(/^\/blog\/([^/]+)\/?$/)?.[1] || new URLSearchParams(location.search).get('slug') || '');
 
 const notice = (title, text) => {

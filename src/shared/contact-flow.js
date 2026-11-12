@@ -3,10 +3,16 @@
 // really happened; a failure is never reported as success.
 
 /**
- * @param {{saved: boolean, emailed: boolean}} result
+ * @param {{saved: boolean, emailed: boolean, confirmed?: boolean}} result
  * @returns {{kind: 'success'|'partial'|'failed', message: string, toast: string}}
  */
-export function describeOutcome({ saved, emailed }, ownerEmail) {
+export function describeOutcome({ saved, emailed, confirmed = false }, ownerEmail) {
+  const outcome = baseOutcome({ saved, emailed }, ownerEmail);
+  if (confirmed && outcome.kind !== 'failed') outcome.message += ' A confirmation email is on its way to you (check your spam folder if you do not see it).';
+  return outcome;
+}
+
+function baseOutcome({ saved, emailed }, ownerEmail) {
   if (saved && emailed) {
     return {
       kind: 'success',

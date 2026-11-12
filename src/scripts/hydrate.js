@@ -3,11 +3,13 @@
 // no Firebase, no documents, or no network just means the visitor sees the built-in content.
 import { listProjects, listSkills, listExperiences } from '../firebase/api.js';
 import { firebaseReady } from '../firebase/app.js';
-import { projects as builtIn, now as builtInNow } from '../data/content.js';
+import { projects as builtIn, now as builtInNow, availability as builtInAvailability } from '../data/content.js';
 import { skillRows } from '../render/sections/about.js';
 import { moreProjectsInner } from '../render/sections/projects.js';
 import { timelineRows, recognitionItems } from '../render/sections/closing.js';
 import { nowHtml } from '../render/sections/now.js';
+import { availabilityHtml } from '../render/sections/availability.js';
+import { AVAILABILITY_DOC_ID, resolveAvailability } from '../shared/availability.js';
 import { NOW_DOC_ID, resolveNow } from '../shared/now.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -52,6 +54,10 @@ export async function hydrate() {
     const saved = experiences.value.find((e) => e.id === NOW_DOC_ID);
     const slot = $('[data-now]');
     if (slot && saved) slot.innerHTML = nowHtml(resolveNow(saved, builtInNow), false);
+    // The availability badge in the hero.
+    const badge = $('[data-availability]');
+    const availability = experiences.value.find((e) => e.id === AVAILABILITY_DOC_ID);
+    if (badge && availability) badge.outerHTML = availabilityHtml(resolveAvailability(availability, builtInAvailability));
   }
 
   // Content height changed: let ScrollTrigger recompute its trigger positions.

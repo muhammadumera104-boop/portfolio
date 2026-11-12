@@ -9,7 +9,7 @@ export default [
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['vite.config.js', 'eslint.config.js', 'src/render/**/*.js', 'src/data/**/*.js', 'tests/**/*.js', 'api/**/*.js', 'build/**/*.js'],
+    files: ['vite.config.js', 'eslint.config.js', 'src/render/**/*.js', 'src/data/**/*.js', 'tests/**/*.js', 'api/**/*.js', 'build/**/*.{js,mjs}'],
     languageOptions: { globals: globals.node },
   },
 ];

@@ -158,6 +158,12 @@ export const nowSchema = z.object({
   note: z.string().trim().max(200, 'Keep the note under 200 characters.').default(''),
 });
 
+// The hero's "Open to internships" badge, saved as one document (experiences/availability).
+export const availabilitySchema = z.object({
+  open: z.boolean().default(true),
+  text: z.string().trim().max(40, 'Keep it under 40 characters.').default(''),
+});
+
 /** Turns a failed safeParse into { fieldName: 'first message' }. */
 export function fieldErrors(error) {
   const out = {};

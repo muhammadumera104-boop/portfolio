@@ -1,6 +1,7 @@
 // The small console in the About section. Its answers come from src/data/content.js.
 import { profile, links, skills, projects, webProjects, education, about } from '../data/content.js';
-import { toggleTheme } from './theme.js';
+import { getTheme, setTheme } from './theme.js';
+import { themeChoice, themeUsage, blogLines, resumeLines, hireLines, eggLines } from '../shared/terminal-extra.js';
 
 const github = links.find((l) => l.label === 'GitHub');
 const linkedin = links.find((l) => l.label === 'LinkedIn');
@@ -55,12 +56,27 @@ const commands = {
   github: { about: 'open GitHub', run: () => openLink(github) },
   linkedin: { about: 'open LinkedIn', run: () => openLink(linkedin) },
   theme: {
-    about: 'switch light/dark',
-    run: () => {
-      toggleTheme();
-      return [`Theme: ${document.documentElement.dataset.theme}`];
+    about: 'theme [dark|light|toggle]',
+    run: (arg) => {
+      const next = themeChoice(arg, getTheme());
+      if (!next) return themeUsage();
+      setTheme(next);
+      return [`Theme: ${next}`];
     },
   },
+  blog: {
+    about: 'latest blog posts',
+    run: async () => {
+      try {
+        const response = await fetch('/search-index.json');
+        return blogLines(response.ok ? await response.json() : null);
+      } catch {
+        return blogLines(null);
+      }
+    },
+  },
+  resume: { about: 'download my CV (PDF)', run: () => resumeLines() },
+  hire: { about: 'why and how to hire me', run: () => hireLines() },
   clear: { about: 'clear the screen', run: () => null },
 };
 
@@ -96,8 +112,8 @@ export function initTerminal() {
     output.append(p);
   };
 
-  function execute(raw) {
-    const [name = '', arg] = raw.trim().toLowerCase().split(/\s+/);
+  async function execute(raw) {
+    const [name = '', arg, ...more] = raw.trim().toLowerCase().split(/\s+/);
     if (!name) return;
     history.push(raw.trim());
     cursor = history.length;
@@ -107,7 +123,9 @@ export function initTerminal() {
     }
     line(raw.trim(), 't-cmd');
     const command = commands[name];
-    const result = command ? command.run(arg) : [`command not found: ${name} — type “help”.`];
+    let result;
+    if (name === 'sudo') result = eggLines([arg, ...more].filter(Boolean)); // hidden easter egg
+    else result = command ? await command.run(arg) : [`command not found: ${name} — type “help”.`];
     result?.forEach((item) => line(item));
     output.scrollTop = output.scrollHeight;
   }

@@ -9,9 +9,11 @@ import { basename, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { loadEnv } from 'vite';
-import { DEFAULT_IMAGE, headBlock, resolveSiteUrl, robotsTxt, sitemapXml, swap } from './seo.js';
+import { DEFAULT_IMAGE, headBlock, isOn, resolveSiteUrl, robotsTxt, rssXml, sitemapXml, swap } from './seo.js';
 import { fetchCollection, fetchProjects, fetchPublishedPosts } from './firestore-rest.js';
 import { NOW_DOC_ID } from '../src/shared/now.js';
+import { AVAILABILITY_DOC_ID } from '../src/shared/availability.js';
+import { searchIndex } from '../src/shared/palette.js';
 import { SITE, absoluteUrl, blogJsonLd, homeJsonLd, postJsonLd, postPath, projectJsonLd, projectPath, snippet, socialImage } from '../src/shared/seo.js';
 import { isCloudinaryUrl } from '../src/shared/cloudinary.js';
 import { builtInPosts, withBuiltInDefaults } from '../src/data/posts.js';
@@ -36,29 +38,33 @@ export function seoPlugin() {
   let buildFailed = false;
   let postsOnce;
   let projectsOnce;
-  let nowOnce;
+  let experiencesOnce;
 
   const site = () => resolveSiteUrl(env);
 
-  /** The "Now" document the owner saved in the dashboard (experiences/now), or null to use the built-in content. */
-  const collectNow = () =>
-    (nowOnce ||= (async () => {
+  /** The owner's small documents in the `experiences` collection ("Now", availability), read once per build. */
+  const collectExperienceDocs = () =>
+    (experiencesOnce ||= (async () => {
       const projectId = env.VITE_FIREBASE_PROJECT_ID;
-      if (!projectId) return null;
+      if (!projectId) return [];
       try {
-        const saved = (await fetchCollection(projectId, 'experiences')).find((doc) => doc.id === NOW_DOC_ID) || null;
-        console.log(`[seo] "Now" section from ${saved ? 'Firestore' : 'the built-in content'}.`);
-        return saved;
+        const docs = await fetchCollection(projectId, 'experiences');
+        const from = (id) => (docs.some((doc) => doc.id === id) ? 'Firestore' : 'the built-in content');
+        console.log(`[seo] "Now" section from ${from(NOW_DOC_ID)}; availability badge from ${from(AVAILABILITY_DOC_ID)}.`);
+        return docs;
       } catch (error) {
-        console.warn(`[seo] could not read the "Now" section from Firestore (${error.message}); using the built-in content.`);
-        return null;
+        console.warn(`[seo] could not read the "Now" section and badge from Firestore (${error.message}); using the built-in content.`);
+        return [];
       }
     })());
+  const collectNow = async () => (await collectExperienceDocs()).find((doc) => doc.id === NOW_DOC_ID) || null;
+  const collectAvailability = async () => (await collectExperienceDocs()).find((doc) => doc.id === AVAILABILITY_DOC_ID) || null;
   /** Search-console verification tags and the analytics id, all optional and read from the environment. */
   const tracking = () => ({
     verification: env.VITE_GOOGLE_SITE_VERIFICATION || '',
     bing: env.VITE_BING_SITE_VERIFICATION || '',
     analyticsId: env.VITE_GA_MEASUREMENT_ID || '',
+    vercelAnalytics: isOn(env.VITE_VERCEL_ANALYTICS),
   });
   const load = (path) => (server ? server.ssrLoadModule(path) : import(/* @vite-ignore */ pathToFileURL(resolve(config.root, `.${path}`)).href));
 
@@ -177,13 +183,17 @@ export function seoPlugin() {
         const { nowSlot } = await load('/src/render/sections/now.js');
         out = swap(out, 'now', nowSlot(await collectNow()));
       }
+      if (name === 'index.html' && out.includes('<!--availability:start-->')) {
+        const { availabilityBadge } = await load('/src/render/sections/availability.js');
+        out = swap(out, 'availability', availabilityBadge(await collectAvailability()));
+      }
       return out;
     },
 
     buildStart() {
       postsOnce = undefined;
       projectsOnce = undefined;
-      nowOnce = undefined;
+      experiencesOnce = undefined;
     },
 
     buildEnd(error) {
@@ -292,7 +302,10 @@ export function seoPlugin() {
       ];
       await writeFile(resolve(outDir, 'sitemap.xml'), sitemapXml(siteUrl, entries));
       await writeFile(resolve(outDir, 'robots.txt'), robotsTxt(siteUrl));
-      console.log(`[seo] wrote ${posts.length + projects.length + 1} prerendered pages, sitemap.xml and robots.txt for ${siteUrl}`);
+      await writeFile(resolve(outDir, 'rss.xml'), rssXml(siteUrl, posts));
+      // The Ctrl/Cmd+K palette downloads this small file the first time it opens (see scripts/palette.js).
+      await writeFile(resolve(outDir, 'search-index.json'), JSON.stringify(searchIndex({ projects, posts })));
+      console.log(`[seo] wrote ${posts.length + projects.length + 1} prerendered pages, sitemap.xml, robots.txt, rss.xml and search-index.json for ${siteUrl}`);
     },
   };
 }

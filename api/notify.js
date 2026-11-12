@@ -2,9 +2,10 @@
 // Called by the contact form. Does two independent things and reports each one honestly:
 //   saved:  the message is stored in the Firestore inbox (the admin "Messages" tab)
 //   ok:     an email copy was sent to the owner
-// The recipient is always the owner's own address, so this can never be used to mail anyone else.
+// The owner notice always goes to the owner. The visitor also gets a short, fixed confirmation (nothing they typed is
+// copied into it), only for a message that really arrived, and at most twice an hour per address.
 import { HttpError, assertSameSite, clientIp, handle, jsonBody, rateLimit } from './_lib/http.js';
-import { buildOwnerNotice, mailConfig, sendMail } from './_lib/mail.js';
+import { buildConfirmation, buildOwnerNotice, mailConfig, sendMail, shouldConfirm } from './_lib/mail.js';
 import { saveToInbox } from './_lib/inbox.js';
 import { resolveSiteUrl } from '../build/seo.js';
 import { contactSchema } from '../src/shared/schemas.js';
@@ -38,5 +39,20 @@ export default handle(async (req) => {
       }
     })(),
   ]);
-  return { ok: emailed, saved };
+
+  // The automatic confirmation to the visitor. It never changes the outcome above: if it fails, the message still arrived.
+  let confirmed = false;
+  if (saved || emailed) {
+    try {
+      const config = mailConfig();
+      if (shouldConfirm(parsed.data.email, { owner: config.owner, user: config.user })) {
+        rateLimit(`confirm:${parsed.data.email.toLowerCase()}`, { max: 2, windowMs: 60 * 60 * 1000 });
+        await sendMail(buildConfirmation({ to: parsed.data.email }, { owner: config.owner, siteUrl }));
+        confirmed = true;
+      }
+    } catch (error) {
+      if (!(error instanceof HttpError)) console.error('[notify] confirmation', error.message); // 429 / 503: skipped quietly
+    }
+  }
+  return { ok: emailed, saved, confirmed };
 });

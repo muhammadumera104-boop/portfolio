@@ -8,14 +8,17 @@ import '../styles/base.css';
 import '../styles/layout.css';
 import '../styles/components.css';
 import '../styles/app.css';
+import '../styles/rtl.css';
 import { shellHtml, BLOG_PATH } from '../render/shell.js';
 import { initTheme } from '../scripts/theme.js';
 import { initNav } from '../scripts/nav.js';
+import { initPalette } from '../scripts/palette.js';
+import { initLang } from '../scripts/lang.js';
 
 /** Returns the <main> element to render into. */
 export function mountShell({ current = BLOG_PATH } = {}) {
   if (!document.getElementById('main')) document.body.insertAdjacentHTML('afterbegin', shellHtml({ current }));
-  [initTheme, initNav].forEach((init) => {
+  [initTheme, initNav, initPalette, initLang].forEach((init) => {
     try {
       init();
     } catch (error) {

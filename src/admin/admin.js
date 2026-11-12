@@ -10,12 +10,13 @@ import * as api from '../firebase/admin-api.js';
 import { createEditor } from './editor.js';
 import { toast } from '../shared/toast.js';
 import {
-  postSchema, projectSchema, skillSchema, experienceSchema, nowSchema, fieldErrors,
+  postSchema, projectSchema, skillSchema, experienceSchema, nowSchema, availabilitySchema, fieldErrors,
 } from '../shared/schemas.js';
 import { slugify, readingTime, makeExcerpt, formatDate, toDate, parseCsv, parseLines } from '../shared/utils.js';
 import { esc, list } from '../render/util.js';
 import { NOW_DOC_ID, cleanNow } from '../shared/now.js';
-import { now as nowDefault } from '../data/content.js';
+import { now as nowDefault, availability as availabilityDefault } from '../data/content.js';
+import { AVAILABILITY_DOC_ID, cleanAvailability, availabilityLabel } from '../shared/availability.js';
 import { suggestEmail } from '../shared/email-check.js';
 import {
   parseVideoLines, formatVideoLines, parseResourceLines, formatResourceLines, parseScreenshotLines, formatScreenshotLines,
@@ -27,7 +28,7 @@ const state = { user: null, tab: 'overview', editor: null };
 
 const TABS = [
   ['overview', 'Overview'], ['blog', 'Blog'], ['projects', 'Projects'], ['skills', 'Skills'],
-  ['experiences', 'Education'], ['now', 'Now'], ['messages', 'Messages'], ['comments', 'Comments'],
+  ['experiences', 'Education'], ['now', 'Now'], ['availability', 'Availability'], ['messages', 'Messages'], ['comments', 'Comments'],
 ];
 
 // ── helpers ─────────────────────────────────────────────────
@@ -126,7 +127,7 @@ function go(tab) {
   main.innerHTML = '<p class="admin__loading">Loading…</p>';
   const views = {
     overview: viewOverview, blog: viewBlog, projects: () => viewCrud('projects'), skills: () => viewCrud('skills'),
-    experiences: () => viewCrud('experiences'), now: viewNow, messages: viewMessages, comments: viewComments,
+    experiences: () => viewCrud('experiences'), now: viewNow, availability: viewAvailability, messages: viewMessages, comments: viewComments,
   };
   Promise.resolve(views[tab](main)).catch((error) => {
     console.error(error);
@@ -274,7 +275,7 @@ const CRUD = {
 
 async function viewCrud(name) {
   const cfg = CRUD[name];
-  const items = (await api.listAll(name)).filter((d) => d.kind !== 'now').sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+  const items = (await api.listAll(name)).filter((d) => !['now', 'availability'].includes(d.kind)).sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
   state.items = items;
   document.getElementById('admin-main').innerHTML = `
     <header class="admin__head"><h1>${cfg.title}</h1><button type="button" class="btn btn--ink btn--sm" data-new-item="${name}">Add new</button></header>
@@ -368,6 +369,35 @@ async function submitNow(form) {
   }
   showErrors(form, {});
   await act(() => api.saveDoc('experiences', NOW_DOC_ID, { kind: 'now', ...result.data }), 'Saved. Visitors see it now; search engines see it after the next deploy.');
+}
+
+// ── Availability badge ──────────────────────────────────────
+// One document (experiences/availability). The security rules already let only the owner write to `experiences`.
+async function viewAvailability(main) {
+  const saved = (await api.listAll('experiences')).find((d) => d.id === AVAILABILITY_DOC_ID);
+  const current = cleanAvailability(saved || availabilityDefault);
+  main.innerHTML = `
+    <header class="admin__head"><h1>Availability</h1></header>
+    <p class="panel">The badge at the top of your home page. Switch it off when you are no longer looking (for example after you accept an internship). Visitors see a change as soon as you save.${saved ? '' : ' You have not saved anything yet, so the built-in setting is shown below.'}</p>
+    <form class="form" data-availability-form novalidate>
+      <label class="check"><input type="checkbox" name="open"${current.open ? ' checked' : ''}> Open to internships (show the green badge)</label>
+      <div class="field"><label for="a-text">Your own words (optional, 40 characters at most)</label><input id="a-text" name="text" maxlength="40" value="${esc(current.text)}" placeholder="Leave empty for the standard words"><p class="field__error" data-err="text"></p></div>
+      <p class="rows__sub">Standard words: “Open to internships” when it is on, “Not taking internships right now” when it is off.</p>
+      <p class="rows__sub" data-availability-preview>Badge now reads: <strong>${esc(availabilityLabel(current))}</strong></p>
+      <div class="form__actions"><button class="btn btn--ink" type="submit">Save</button></div>
+    </form>`;
+}
+
+async function submitAvailability(form) {
+  const data = { open: form.elements.open.checked, text: form.elements.text.value };
+  const result = availabilitySchema.safeParse(data);
+  if (!result.success) {
+    showErrors(form, fieldErrors(result.error));
+    return toast('Please fix the highlighted fields.', 'error');
+  }
+  showErrors(form, {});
+  const saved = await act(() => api.saveDoc('experiences', AVAILABILITY_DOC_ID, { kind: 'availability', ...result.data }), 'Saved. Visitors see the new badge now.');
+  if (saved) form.querySelector('[data-availability-preview]').innerHTML = `Badge now reads: <strong>${esc(availabilityLabel(result.data))}</strong>`;
 }
 
 // ── messages & comments ─────────────────────────────────────
@@ -487,6 +517,7 @@ root.addEventListener('submit', async (event) => {
     } else if (form.matches('[data-post-form]')) await submitPost(form);
     else if (form.matches('[data-crud-form]')) await submitCrud(form);
     else if (form.matches('[data-now-form]')) await submitNow(form);
+    else if (form.matches('[data-availability-form]')) await submitAvailability(form);
   } finally {
     button.disabled = false;
   }

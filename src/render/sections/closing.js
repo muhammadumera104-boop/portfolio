@@ -1,4 +1,4 @@
-import { approach, education, recognition, contact, profile, links, nav } from '../../data/content.js';
+import { approach, education, recognition, contact, profile, links, nav, cv } from '../../data/content.js';
 import { esc, list, arrow, heading, external } from '../util.js';
 
 export const approachSection = () => `
@@ -57,8 +57,9 @@ export const educationSection = () => `
       ${recognitionItems(recognition)}
       <div class="recognition__item recognition__cv" data-reveal>
         <p class="label">Résumé</p>
-        <p>A print-ready CV is generated from this page.</p>
-        <button class="btn btn--line" type="button" data-print>Save CV as PDF ${arrow('down')}</button>
+        <p>A one-page CV, made from this site's content, ready to send with an application.</p>
+        <a class="btn btn--ink" href="${cv.path}" download="${cv.file}">Download CV (PDF) ${arrow('down')}</a>
+        <button class="btn btn--line" type="button" data-print>Print this page</button>
       </div>
     </div>
   </div>
@@ -112,6 +113,7 @@ export const footer = (base = '') => `
     <nav aria-label="Footer"><ul class="site-footer__list">${list(nav, (n) => `<li><a href="${n.href.startsWith('#') ? base + n.href : n.href}">${esc(n.label)}</a></li>`)}</ul></nav>
     <ul class="site-footer__list">
       <li><a href="mailto:${esc(profile.email)}">Email</a></li>
+      <li><a href="${cv.path}" download="${cv.file}">CV (PDF)</a></li>
       ${list(links, (l) => `<li>${external(l.href, esc(l.label))}</li>`)}
     </ul>
     <div class="site-footer__meta">

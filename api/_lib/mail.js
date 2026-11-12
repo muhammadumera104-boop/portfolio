@@ -4,6 +4,8 @@
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { HttpError } from './http.js';
+import { suggestEmail } from '../../src/shared/email-check.js';
+import { cv, links } from '../../src/data/content.js';
 
 export const escapeHtml = (value) =>
   String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
@@ -102,6 +104,53 @@ export function buildReply({ to, name, subject, message, original }, { owner, si
 <div style="margin:0 0 20px;white-space:pre-wrap">${escapeHtml(message)}</div>
 <p style="margin:0">Best regards,<br><strong>Muhammad Umer Rizwan</strong></p>${original ? `<div style="margin:24px 0 0;padding:4px 0 4px 14px;border-left:4px solid #ddd;color:#777;font-size:14px;white-space:pre-wrap"><span style="font-size:12px;text-transform:uppercase;letter-spacing:.05em">Your message</span><br>${escapeHtml(original)}</div>` : ''}`,
       footer: 'You can reply directly to this email.',
+    }),
+  };
+}
+
+// ── Automatic confirmation to the person who used the contact form ─────────────────────────────────────────────
+// The text is fixed on purpose. Nothing the visitor typed (name, subject, message) is copied into it, so the form cannot
+// be used to make this site send somebody else's words to a third person's address.
+
+const NO_REPLY_LOCALS = /^(no-?reply|do-?not-?reply|donotreply|mailer-daemon|postmaster|bounce[sd]?|abuse)$/i;
+
+/**
+ * Whether a confirmation should go to this address. Not to the owner's own addresses (no mail loops), not to robot
+ * addresses, and not to an address with an obviously mistyped domain (it would only bounce).
+ */
+export function shouldConfirm(email, { owner = '', user = '' } = {}) {
+  const address = String(email ?? '').trim().toLowerCase();
+  if (!address.includes('@')) return false;
+  if (address === String(owner).trim().toLowerCase() || address === String(user).trim().toLowerCase()) return false;
+  if (NO_REPLY_LOCALS.test(address.split('@')[0])) return false;
+  return !suggestEmail(address);
+}
+
+/** The "I got your message" email. Marked as automatic so out-of-office robots do not answer it. */
+export function buildConfirmation({ to }, { owner, siteUrl }) {
+  const site = siteUrl.replace(/^https?:\/\//, '');
+  const cvUrl = `${siteUrl}${cv.path}`;
+  const github = links.find((l) => l.label === 'GitHub')?.href;
+  const items = [
+    { label: 'Projects and case studies', href: `${siteUrl}/#projects` },
+    { label: 'My CV (PDF)', href: cvUrl },
+    ...(github ? [{ label: 'GitHub', href: github }] : []),
+  ];
+  return {
+    to,
+    replyTo: owner,
+    subject: 'Thanks for your message — Muhammad Umer Rizwan',
+    headers: { 'Auto-Submitted': 'auto-replied', Precedence: 'bulk', 'X-Auto-Response-Suppress': 'All' },
+    text: `Hi,\n\nThank you for writing to me through my portfolio. I have received your message and I will reply to this email address myself.\n\nWhile you wait:\n${items.map((i) => `- ${i.label}: ${i.href}`).join('\n')}\n\nBest regards,\nMuhammad Umer Rizwan\n\n—\nThis is an automatic confirmation. If you did not send a message through the contact form on ${site}, you can ignore this email; nothing else will be sent.\n`,
+    html: brandedEmail({
+      heading: 'Thanks for getting in touch',
+      siteUrl,
+      bodyHtml: `<p style="margin:0 0 16px">Hi,</p>
+<p style="margin:0 0 16px">Thank you for writing to me through my portfolio. I have received your message and I will reply to this email address myself.</p>
+<p style="margin:0 0 8px">While you wait:</p>
+<ul style="margin:0 0 20px;padding-left:20px">${items.map((i) => `<li><a href="${escapeHtml(i.href)}" style="color:#c2341f">${escapeHtml(i.label)}</a></li>`).join('')}</ul>
+<p style="margin:0">Best regards,<br><strong>Muhammad Umer Rizwan</strong></p>`,
+      footer: `This is an automatic confirmation. If you did not send a message through the contact form on ${escapeHtml(site)}, you can ignore this email; nothing else will be sent.`,
     }),
   };
 }

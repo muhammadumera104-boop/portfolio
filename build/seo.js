@@ -1,6 +1,7 @@
 // Build-time SEO output: the <head> block for each page, sitemap.xml and robots.txt. Pure functions.
 import { esc } from '../src/render/util.js';
-import { SITE, jsonLdText } from '../src/shared/seo.js';
+import { SITE, jsonLdText, absoluteUrl, postPath } from '../src/shared/seo.js';
+import { makeExcerpt, toDate } from '../src/shared/utils.js';
 
 export const DEFAULT_IMAGE = { path: '/og-image.png', alt: 'M. Umer — Software, from the ground up.', width: 1200, height: 630 };
 
@@ -23,6 +24,18 @@ export const analyticsSnippet = (id) =>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${id}',{anonymize_ip:true});</script>`
     : '';
 
+/** True for "1", "true" or "yes" (any capitals): how the VITE_VERCEL_ANALYTICS switch is read. */
+export const isOn = (value) => /^(1|true|yes)$/i.test(String(value ?? '').trim());
+
+/**
+ * Vercel Web Analytics: page views without cookies and without a profile of the visitor, which is why it needs no
+ * cookie banner. It only loads when VITE_VERCEL_ANALYTICS is switched on, and it also has to be enabled once in the
+ * Vercel dashboard (Project > Analytics). The script is served by Vercel from this site's own address (/_vercel/...),
+ * so the content security policy needs no extra host. It is never added to the admin page.
+ */
+export const vercelAnalyticsSnippet = (enabled) =>
+  enabled ? '<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>\n  <script defer src="/_vercel/insights/script.js"></script>' : '';
+
 const tag = (name, content) => (content ? `<meta name="${name}" content="${esc(content)}">` : '');
 const prop = (name, content) => (content ? `<meta property="${name}" content="${esc(content)}">` : '');
 
@@ -34,7 +47,7 @@ const prop = (name, content) => (content ? `<meta property="${name}" content="${
 export function headBlock({
   siteUrl, title, description, path, image, imageAlt, imageSize, type = 'website', jsonLd,
   robots = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
-  published, modified, tags = [], verification = '', bing = '', analyticsId = '',
+  published, modified, tags = [], verification = '', bing = '', analyticsId = '', vercelAnalytics = false,
 }) {
   const canonical = `${siteUrl}${path}`;
   return [
@@ -45,6 +58,7 @@ export function headBlock({
     tag('google-site-verification', verification),
     tag('msvalidate.01', bing),
     `<link rel="canonical" href="${esc(canonical)}">`,
+    `<link rel="alternate" type="application/rss+xml" title="${esc(SITE.name)} — Blog" href="${esc(siteUrl)}/rss.xml">`,
     prop('og:site_name', SITE.name),
     prop('og:locale', SITE.locale),
     prop('og:type', type),
@@ -65,6 +79,7 @@ export function headBlock({
     tag('twitter:image', image),
     tag('twitter:image:alt', imageAlt),
     jsonLd ? `<script type="application/ld+json" data-ld="page">${jsonLdText(jsonLd)}</script>` : '',
+    vercelAnalyticsSnippet(vercelAnalytics),
     analyticsSnippet(analyticsId),
   ]
     .filter(Boolean)
@@ -89,6 +104,46 @@ export function sitemapXml(siteUrl, entries) {
     .map(({ path, lastmod }) => `  <url>\n    <loc>${esc(siteUrl + path)}</loc>${day(lastmod) ? `\n    <lastmod>${day(lastmod)}</lastmod>` : ''}\n  </url>`)
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${rows}\n</urlset>\n`;
+}
+
+/**
+ * The blog as an RSS 2.0 feed (/rss.xml), newest posts first, so people can follow it in a feed reader.
+ * Each item carries the title, the permanent link, the date, the category and a short excerpt, never the full article.
+ */
+export function rssXml(siteUrl, posts, now = new Date()) {
+  const items = posts
+    .slice(0, 30)
+    .map((p) => {
+      const link = absoluteUrl(siteUrl, postPath(p.slug));
+      const date = toDate(p.createdAt);
+      const summary = String(p.excerpt || makeExcerpt(p.content || '', 280));
+      return [
+        '    <item>',
+        `      <title>${esc(p.title)}</title>`,
+        `      <link>${esc(link)}</link>`,
+        `      <guid isPermaLink="true">${esc(link)}</guid>`,
+        date ? `      <pubDate>${date.toUTCString()}</pubDate>` : '',
+        p.category ? `      <category>${esc(p.category)}</category>` : '',
+        `      <description>${esc(summary)}</description>`,
+        '    </item>',
+      ]
+        .filter(Boolean)
+        .join('\n');
+    })
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${esc(SITE.name)} — Blog</title>
+    <link>${esc(siteUrl)}/blog/</link>
+    <description>Notes on programming, algorithms and building for the web.</description>
+    <language>en</language>
+    <lastBuildDate>${now.toUTCString()}</lastBuildDate>
+    <atom:link href="${esc(siteUrl)}/rss.xml" rel="self" type="application/rss+xml"/>
+${items}
+  </channel>
+</rss>
+`;
 }
 
 export const robotsTxt = (siteUrl) =>

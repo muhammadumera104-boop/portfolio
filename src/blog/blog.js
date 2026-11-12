@@ -45,17 +45,17 @@ function sync() {
 }
 
 function render() {
-  // Categories are the main filter; posts without any fall back to filtering by tag.
+  // Two rows of filters that work together: category and tag. A row is left out when no post has any.
   const categories = [...new Set(state.posts.map((p) => p.category).filter(Boolean))].sort();
   const tags = [...new Set(state.posts.flatMap((p) => p.tags || []))].sort();
-  const [kind, values, current] = categories.length ? ['category', categories, state.category] : ['tag', tags, state.tag];
-  tagBox.setAttribute('aria-label', kind === 'category' ? 'Filter by category' : 'Filter by tag');
-  tagBox.innerHTML = values.length
-    ? `<button type="button" class="filter${current ? '' : ' is-active'}" data-filter-kind="${kind}" data-value="" aria-pressed="${!current}">All</button>${list(
-        values,
-        (v) => `<button type="button" class="filter${current === v ? ' is-active' : ''}" data-filter-kind="${kind}" data-value="${esc(v)}" aria-pressed="${current === v}">${esc(v)}</button>`,
-      )}`
-    : '';
+  const group = (kind, label, values, current) =>
+    values.length
+      ? `<div class="blog-tags__group" role="group" aria-label="Filter by ${kind}"><span class="label">${label}</span><button type="button" class="filter${current ? '' : ' is-active'}" data-filter-kind="${kind}" data-value="" aria-pressed="${!current}">All</button>${list(
+          values,
+          (v) => `<button type="button" class="filter${current === v ? ' is-active' : ''}" data-filter-kind="${kind}" data-value="${esc(v)}" aria-pressed="${current === v}">${esc(v)}</button>`,
+        )}</div>`
+      : '';
+  tagBox.innerHTML = group('category', 'Category', categories, state.category) + group('tag', 'Tag', tags, state.tag);
 
   const filtered = filterPosts(state.posts, { search: state.q, tag: state.tag, category: state.category });
   const view = paginate(filtered, state.page, PER_PAGE);

@@ -45,7 +45,7 @@ export const aboutSection = () => `
             <input id="terminal-input" name="command" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" placeholder="type a command">
           </form>
           <div class="terminal__chips" aria-label="Suggested commands">
-            ${list(['help', 'whoami', 'skills', 'projects', 'contact'], (c) => `<button type="button" class="terminal__chip" data-command="${c}">${c}</button>`)}
+            ${list(['help', 'whoami', 'skills', 'projects', 'hire', 'contact'], (c) => `<button type="button" class="terminal__chip" data-command="${c}">${c}</button>`)}
           </div>
         </div>
         <p class="about__note">A note to visitors: I’m early in my journey. If you have an internship or a learning-focused project, I’d love to connect.</p>

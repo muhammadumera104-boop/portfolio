@@ -57,13 +57,13 @@ export const blogPageHtml = (posts) => `
 <section class="page-head container">
   <p class="label"><span class="section-head__index">(Blog)</span> Writing</p>
   <h1 class="page-head__title">Notes from <em>learning</em> in public.</h1>
-  <p class="page-head__lead">Short write-ups on programming, algorithms and building for the web, each with a thumbnail and video guides to go deeper.</p>
+  <p class="page-head__lead">Short write-ups on programming, algorithms and building for the web, each with a thumbnail and video guides to go deeper. <a class="link-arrow" href="/rss.xml">Follow with RSS</a></p>
 </section>
 <section class="container blog">
   <div class="blog-tools">
     <label class="sr-only" for="blog-search">Search posts</label>
     <input id="blog-search" class="blog-search" type="search" placeholder="Search posts…" autocomplete="off" maxlength="80">
-    <div class="blog-tags" role="group" aria-label="Filter by tag" data-tags></div>
+    <div class="blog-tags" data-tags></div>
   </div>
   <div class="post-grid" data-grid aria-live="polite" data-prerendered>${list(posts, (p, i) => postCard(p, { eager: i === 0 }))}</div>
   <nav class="pager" aria-label="Pagination" data-pager></nav>

@@ -55,7 +55,8 @@ The build uses absolute paths (`base: '/'`) because pages such as `/blog/<slug>/
 | `SMTP_USER`, `SMTP_PASS` | emails: new-message alerts and replies | **password: yes** |
 | `VITE_SITE_URL` (optional) | canonical links, sitemap, share previews; set it when you add a custom domain | no |
 | `VITE_GOOGLE_SITE_VERIFICATION`, `VITE_BING_SITE_VERIFICATION` (optional) | Google Search Console and Bing Webmaster Tools verification tags | no |
-| `VITE_GA_MEASUREMENT_ID` (optional) | Google Analytics 4 (`G-XXXXXXXXXX`); nothing loads without it | no |
+| `VITE_VERCEL_ANALYTICS` (optional) | `1` turns on Vercel Web Analytics: page views with no cookies and no visitor profile, so no cookie banner is needed. Also enable it once in the Vercel dashboard (Project, then Analytics) | no |
+| `VITE_GA_MEASUREMENT_ID` (optional) | Google Analytics 4 (`G-XXXXXXXXXX`); nothing loads without it. Uses cookies, so prefer the Vercel option above | no |
 
 Never put secrets in a variable that starts with `VITE_`: those are shipped to every visitor's browser. See `.env.example`.
 
@@ -150,7 +151,31 @@ Open **`src/styles/tokens.css`**.
 
 ### Résumé / CV
 
-The **Save CV as PDF** button prints the page with `print.css`. This hides the decorative and interactive parts and lays the content out as a CV. Edit `print.css` to change what is included.
+**Download CV (PDF)** serves one fixed file, `public/cv/Muhammad-Umer-Rizwan-CV.pdf`. It is made from the same data as the site (education, skills, projects, and any certificates you add), so nothing is typed twice. After you change that data, make the file again and commit it:
+
+```bash
+npm run cv
+```
+
+This uses the Chrome or Edge that is already on your computer (set `CV_BROWSER` to its path if it is somewhere unusual). The layout is in `src/render/cv.js`. The older **Print this page** button still prints the whole page with `print.css`.
+
+### Things you can change without touching code
+
+Sign in at `/admin.html`:
+
+- **Now** tab: what you are building and learning this month (shown in the "Now" section).
+- **Availability** tab: switch the "Open to internships" badge in the hero on or off, or use your own words.
+- **Messages** tab: read and answer contact messages. Visitors also get a short automatic confirmation email (it never repeats what they wrote).
+
+Both small settings are saved as documents in the existing `experiences` collection, so the Firestore rules did not change. Visitors see a change as soon as you save; search engines see it after the next deploy.
+
+### Other features
+
+- **Ctrl or Cmd + K** opens a search palette for sections, projects and blog posts (it reads `/search-index.json`, written at build time).
+- **RSS feed** at `/rss.xml`, advertised in every page head.
+- **Blog posts** show a reading-progress bar for the article; the blog list has search plus separate category and tag filters.
+- **Terminal commands** in the About section: `help`, `hire`, `resume`, `blog`, `theme [dark|light|toggle]`, and one hidden surprise.
+- **English / Urdu** button in the header. Urdu mode turns the page right-to-left and translates the main page (header, hero, headings, About, Skills, Journey, Approach, Education, Now, Contact, footer). Project write-ups, blog posts and the terminal stay in English. The translations are plain data in `src/shared/i18n-ur.js`; they were written with AI assistance, so please read them once and improve the wording.
 
 ## Libraries
 

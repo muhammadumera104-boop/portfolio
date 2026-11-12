@@ -152,7 +152,7 @@ describe('code that must not regress', () => {
     expect(read('src/scripts/hydrate.js')).not.toContain('patchBuiltIn');
   });
   it('the admin keeps the Now document out of the Education list', () => {
-    expect(read('src/admin/admin.js')).toContain("filter((d) => d.kind !== 'now')");
+    expect(read('src/admin/admin.js')).toContain("filter((d) => !['now', 'availability'].includes(d.kind))");
   });
   it('the security rules already protect the collection the Now document lives in (no rules change needed)', () => {
     const rules = read('firestore.rules');

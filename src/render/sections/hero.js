@@ -1,5 +1,6 @@
 import { profile, foundations } from '../../data/content.js';
 import { esc, list, arrow } from '../util.js';
+import { availabilityBadge } from './availability.js';
 
 // Isometric slab geometry for the "foundations" illustration (viewBox 560 × 440).
 const CX = 200, A = 150, B = 75, T = 34, STEP = 58, BASE_Y = 318;
@@ -48,7 +49,7 @@ export const hero = () => `
       <p class="label">Student portfolio</p>
       <p class="label">BSCS · GU TECH</p>
       <p class="label">${esc(profile.location)}</p>
-      <p class="label hero__status"><span class="status-dot" aria-hidden="true"></span>Open to internships</p>
+      <!--availability:start-->${availabilityBadge()}<!--availability:end-->
     </div>
 
     <h1 class="hero__title" id="hero-title">
