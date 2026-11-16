@@ -8,6 +8,7 @@ import './styles/components.css';
 import './styles/sections.css';
 import './styles/motion.css';
 import './styles/app.css';
+import './styles/motion-extras.css';
 import './styles/rtl.css';
 import './styles/print.css';
 
@@ -18,6 +19,7 @@ import { initContactForm } from './scripts/contact.js';
 import { initPathfinder } from './scripts/pathfinder.js';
 import { initHeap } from './scripts/heap.js';
 import { initMotion } from './scripts/motion.js';
+import { initMotionExtras } from './scripts/motion-extras.js';
 import { initMoreProjects } from './scripts/more-projects.js';
 import { initJourney } from './scripts/journey.js';
 import { initHeroFx } from './scripts/hero-fx.js';
@@ -25,7 +27,7 @@ import { initPalette } from './scripts/palette.js';
 import { initLang } from './scripts/lang.js';
 
 // Each feature starts independently, so one failure can't break the rest of the page.
-const features = [initTheme, initNav, initTerminal, initContactForm, initPathfinder, initHeap, initMoreProjects, initJourney, initHeroFx, initPalette, initMotion, initLang];
+const features = [initTheme, initNav, initTerminal, initContactForm, initPathfinder, initHeap, initMoreProjects, initJourney, initHeroFx, initPalette, initMotion, initMotionExtras, initLang];
 features.forEach((init) => {
   try {
     init();

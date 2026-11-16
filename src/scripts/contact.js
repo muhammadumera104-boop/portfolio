@@ -83,6 +83,7 @@ export function initContactForm() {
     submit.disabled = true;
     submit.setAttribute('aria-busy', 'true');
     form.classList.add('is-sending');
+    delete form.dataset.result;
     status.textContent = 'Sending…';
     try {
       // The server saves the message to the dashboard inbox AND emails the owner in one request. The browser's own
@@ -94,6 +95,7 @@ export function initContactForm() {
       const outcome = describeOutcome({ saved, emailed, confirmed }, profile.email);
       status.textContent = outcome.message;
       status.dataset.state = outcome.kind;
+      form.dataset.result = outcome.kind;
       if (outcome.kind === 'failed') {
         toast(outcome.toast, 'error');
         openMailClient(result.data);

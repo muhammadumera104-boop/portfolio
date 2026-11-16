@@ -1,0 +1,252 @@
+/* Motion layer 2: scroll tone, hero atmosphere, project showcase, form feedback, page transitions.
+   Everything here is transform/opacity (or a custom property that GSAP scrubs). JS adds `.fx` to <html>
+   only when motion is allowed, so reduced-motion visitors and no-JS visitors get the original static design. */
+
+:root {
+  /* The page's own colours, remembered so a dark chapter can blend away from them. */
+  --o-bg: var(--bg);
+  --o-bg-raised: var(--bg-raised);
+  --o-fg: var(--fg);
+  --o-fg-muted: var(--fg-muted);
+  --o-rule: var(--rule);
+}
+
+/* ── Continuous light → dark ──
+   motion-extras.js scrubs --dk-in (0→1 as a dark chapter rises into view) and --dk-out (1→0 as it leaves).
+   The chapter's colours are a blend of the page's colours and its own, so both directions are reversible. */
+.fx .inverse {
+  --t: calc(min(var(--dk-in, 1), var(--dk-out, 1)) * 100%);
+  --bg: color-mix(in srgb, var(--inv-bg) var(--t), var(--o-bg));
+  --bg-raised: color-mix(in srgb, var(--inv-bg-raised) var(--t), var(--o-bg-raised));
+  --fg: color-mix(in srgb, var(--inv-fg) var(--t), var(--o-fg));
+  --fg-muted: color-mix(in srgb, var(--inv-fg-muted) var(--t), var(--o-fg-muted));
+  --rule: color-mix(in srgb, var(--inv-rule) var(--t), var(--o-rule));
+}
+
+/* ── Hero atmosphere ── */
+.fx .hero {
+  isolation: isolate;
+}
+
+.fx .hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 42% at 78% 38%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(30% 36% at 18% 78%, color-mix(in srgb, var(--fg) 7%, transparent), transparent 70%);
+  animation: hero-glow 16s ease-in-out infinite alternate;
+}
+
+@keyframes hero-glow {
+  from { transform: translate3d(-2%, 1%, 0) scale(1); opacity: 0.85; }
+  to   { transform: translate3d(3%, -2%, 0) scale(1.08); opacity: 1; }
+}
+
+.fx .stack__svg {
+  animation: stack-float 7s ease-in-out infinite;
+}
+
+@keyframes stack-float {
+  50% { transform: translate3d(0, -8px, 0); }
+}
+
+/* ── Project showcase: tilt, glare, border ── */
+.fx-tilt .project__visual {
+  position: relative;
+  border-radius: var(--radius-m);
+}
+
+.fx-tilt .project__visual > :first-child {
+  transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--zoom, 1));
+  transition: transform 0.6s var(--ease-out);
+  will-change: transform;
+}
+
+.fx-tilt .project__visual.is-tilting > :first-child {
+  transition-duration: 0.12s;
+}
+
+.fx-tilt .project__visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 50%), rgb(255 255 255 / 0.14), transparent 60%);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  transition: opacity 0.4s ease;
+}
+
+.fx-tilt .project__visual.is-tilting {
+  --zoom: 1.015;
+}
+
+.fx-tilt .project__visual.is-tilting::after {
+  opacity: 1;
+}
+
+/* ── Skills ── */
+.chip {
+  transition: transform var(--dur-base) var(--ease-out), background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+@media (hover: hover) {
+  .skill-row:hover .chip {
+    transform: translateY(-2px);
+  }
+
+  .chip:hover {
+    transform: translateY(-3px) scale(1.06) !important;
+  }
+}
+
+/* ── Timeline: an accent sweep draws along each rule as the row arrives ── */
+.fx .timeline__row {
+  position: relative;
+}
+
+.fx .timeline__row::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+}
+
+.fx .timeline__row.is-drawn::after {
+  animation: rule-sweep 1.6s var(--ease-in-out) both;
+}
+
+@keyframes rule-sweep {
+  0%   { transform: scaleX(0); opacity: 1; }
+  60%  { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+/* ── Contact form ── */
+.fx .field {
+  position: relative;
+}
+
+.fx .field input,
+.fx .field textarea {
+  box-shadow: none;
+}
+
+.fx .field:not(.field--trap)::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease-out);
+  pointer-events: none;
+}
+
+.fx .field:focus-within::after {
+  transform: scaleX(1);
+}
+
+.fx .field label {
+  transition: color var(--dur-fast) ease, transform var(--dur-base) var(--ease-out);
+}
+
+.fx .field:focus-within label {
+  color: var(--accent-text);
+  transform: translateX(3px);
+}
+
+.contact-form.is-sending .btn::after {
+  content: '';
+  width: 0.9em;
+  height: 0.9em;
+  margin-inline-start: 0.6rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fx .contact-form__status[data-state] {
+  animation: status-in 0.6s var(--ease-out) both;
+}
+
+.fx .contact-form[data-result='success'] {
+  animation: form-pulse 0.9s var(--ease-out);
+}
+
+.fx .contact-form[data-result='failed'],
+.fx .contact-form[data-result='partial'] {
+  animation: form-shake 0.5s ease-in-out;
+}
+
+@keyframes status-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+@keyframes form-pulse {
+  30% { transform: scale(1.012); }
+}
+
+@keyframes form-shake {
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+/* Arrow links: the arrow glides on hover */
+.link-arrow svg {
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .link-arrow:hover svg {
+    transform: translate(3px, -3px);
+  }
+}
+
+/* ── Page transitions between the site's pages (supporting browsers only) ── */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  ::view-transition-old(root) {
+    animation: 0.25s ease-in both vt-out;
+  }
+
+  ::view-transition-new(root) {
+    animation: 0.45s var(--ease-out) both vt-in;
+  }
+
+  @keyframes vt-out {
+    to { opacity: 0; }
+  }
+
+  @keyframes vt-in {
+    from { opacity: 0; transform: translateY(10px); }
+  }
+}
+
+/* ── Phones: keep the page light on the GPU ── */
+@media (max-width: 760px) {
+  .fx .hero::before,
+  .fx .stack__svg {
+    animation: none;
+  }
+}
