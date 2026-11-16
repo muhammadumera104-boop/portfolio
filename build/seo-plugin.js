@@ -13,6 +13,7 @@ import { DEFAULT_IMAGE, headBlock, isOn, resolveSiteUrl, robotsTxt, rssXml, site
 import { fetchCollection, fetchProjects, fetchPublishedPosts } from './firestore-rest.js';
 import { NOW_DOC_ID } from '../src/shared/now.js';
 import { AVAILABILITY_DOC_ID } from '../src/shared/availability.js';
+import { HOME_SEO, SEO_DOC_ID, resolveSeo } from '../src/shared/seo-settings.js';
 import { searchIndex } from '../src/shared/palette.js';
 import { SITE, absoluteUrl, blogJsonLd, homeJsonLd, postJsonLd, postPath, projectJsonLd, projectPath, snippet, socialImage } from '../src/shared/seo.js';
 import { isCloudinaryUrl } from '../src/shared/cloudinary.js';
@@ -22,10 +23,7 @@ import { buildSeed } from '../src/data/seed.js';
 import { makeExcerpt, newestFirst, relatedPosts, toDate } from '../src/shared/utils.js';
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const HOME = {
-  title: 'Muhammad Umer Rizwan (Umer Lakhani) — Developer in Karachi',
-  description: 'Muhammad Umer Rizwan, also known as Umer Lakhani: BSCS student at GU TECH, Karachi. Projects in C, C++, Python and the web, and a programming blog.',
-};
+const HOME = HOME_SEO; // the owner can override both in the dashboard's SEO tab (see collectSeo)
 const BLOG = {
   title: 'Blog — Muhammad Umer Rizwan',
   description: 'Notes on programming, algorithms and building for the web by Muhammad Umer Rizwan, with thumbnails and video guides on every post.',
@@ -58,6 +56,7 @@ export function seoPlugin() {
       }
     })());
   const collectNow = async () => (await collectExperienceDocs()).find((doc) => doc.id === NOW_DOC_ID) || null;
+  const collectSeo = async () => (await collectExperienceDocs()).find((doc) => doc.id === SEO_DOC_ID) || null;
   const collectAvailability = async () => (await collectExperienceDocs()).find((doc) => doc.id === AVAILABILITY_DOC_ID) || null;
   /** Search-console verification tags and the analytics id, all optional and read from the environment. */
   const tracking = () => ({
@@ -69,7 +68,7 @@ export function seoPlugin() {
   const load = (path) => (server ? server.ssrLoadModule(path) : import(/* @vite-ignore */ pathToFileURL(resolve(config.root, `.${path}`)).href));
 
   /** Head block for the pages that are not prerendered per post or project. */
-  const pageHead = (name, { projects = [] } = {}) => {
+  const pageHead = (name, { projects = [], seo = null } = {}) => {
     const siteUrl = site();
     const image = absoluteUrl(siteUrl, DEFAULT_IMAGE.path);
     const common = { siteUrl, image, imageAlt: DEFAULT_IMAGE.alt, imageSize: DEFAULT_IMAGE, ...tracking() };
@@ -78,7 +77,7 @@ export function seoPlugin() {
         ...builtInProjects.map((p) => ({ name: p.title, url: `/#project-${p.id}` })),
         ...projects.map((p) => ({ name: p.title, url: projectPath(p.slug) })),
       ];
-      return headBlock({ ...common, ...HOME, path: '/', jsonLd: homeJsonLd(siteUrl, { projects: items, video: introVideo }) });
+      return headBlock({ ...common, ...resolveSeo(seo, HOME), path: '/', jsonLd: homeJsonLd(siteUrl, { projects: items, video: introVideo }) });
     }
     if (name === 'blog.html') return headBlock({ ...common, ...BLOG, path: '/blog/', jsonLd: blogJsonLd(siteUrl, []) });
     if (name === '404.html') {
@@ -131,7 +130,10 @@ export function seoPlugin() {
         }
       }
       const mergedCaseStudies = caseStudies.map((c) => ({ ...(fromDb.find((p) => p.slug === c.slug) || {}), ...c }));
-      const source = [...mergedCaseStudies, ...(live.length ? live : webProjects.map((p) => ({ ...p, id: p.slug })))];
+      // Projects that exist in the code but not yet in Firestore are added, so a new built-in project is never left out.
+      const liveSlugs = new Set(live.map((p) => p.slug));
+      const codeOnly = webProjects.filter((p) => !liveSlugs.has(p.slug)).map((p) => ({ ...p, id: p.slug }));
+      const source = [...mergedCaseStudies, ...live, ...codeOnly];
       const valid = source.filter((p) => {
         const ok = SLUG.test(String(p.slug || '')) && p.title && p.summary;
         if (!ok) console.warn(`[seo] skipping a project without a valid slug/title/summary: ${p.slug}`);
@@ -168,7 +170,8 @@ export function seoPlugin() {
       const name = basename(ctx.filename || ctx.path || '');
       if (name === 'admin.html') return html;
       const projects = name === 'index.html' ? await collectProjects() : [];
-      let out = html.replace('<!--seo-->', () => `<!--seo:start-->${pageHead(name, { projects })}<!--seo:end-->`);
+      const seo = name === 'index.html' ? await collectSeo() : null;
+      let out = html.replace('<!--seo-->', () => `<!--seo:start-->${pageHead(name, { projects, seo })}<!--seo:end-->`);
       if (out.includes('<!--shell-->')) {
         const { shellHtml, notFoundHtml } = await load('/src/render/shell.js');
         const inner = name === '404.html' ? notFoundHtml() : '';

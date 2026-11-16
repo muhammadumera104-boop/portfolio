@@ -164,6 +164,13 @@ export const availabilitySchema = z.object({
   text: z.string().trim().max(40, 'Keep it under 40 characters.').default(''),
 });
 
+// The home page's search-result title and description, saved as one document (experiences/seo).
+// Empty means "use the built-in text".
+export const seoSchema = z.object({
+  title: z.string().trim().max(70, 'Keep the title under 70 characters.').default(''),
+  description: z.string().trim().max(160, 'Keep the description under 160 characters.').default(''),
+});
+
 /** Turns a failed safeParse into { fieldName: 'first message' }. */
 export function fieldErrors(error) {
   const out = {};

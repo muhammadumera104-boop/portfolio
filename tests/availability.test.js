@@ -101,7 +101,7 @@ describe('the admin form and its schema', () => {
   });
   it('the Education form cannot hold this document, and the Education list hides it', () => {
     expect(experienceSchema.safeParse({ kind: 'availability', title: 'Open', place: 'Here' }).success).toBe(false);
-    expect(read('src/admin/admin.js')).toContain("filter((d) => !['now', 'availability'].includes(d.kind))");
+    expect(read('src/admin/admin.js')).toContain("filter((d) => !['now', 'availability', 'seo'].includes(d.kind))");
   });
   it('the dashboard has an Availability tab that saves experiences/availability', () => {
     const code = read('src/admin/admin.js');

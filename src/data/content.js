@@ -352,6 +352,35 @@ export const webProjects = [
     featured: false,
     displayOrder: 9,
   },
+  {
+    slug: 'taskflow',
+    features: [
+      'Kanban board with To do, In progress and Done columns',
+      'Tasks saved in a real browser database (IndexedDB)',
+      'Drag and drop, plus move buttons for keyboards and touch screens',
+      'Search, priority filter and overdue highlighting',
+      'JSON export',
+    ],
+    title: 'TaskFlow — kanban with a browser database',
+    category: 'Web',
+    kind: 'JavaScript · IndexedDB',
+    status: 'Demo project',
+    summary: 'A kanban board that keeps its tasks in IndexedDB, the browser’s built-in database, so they survive a reload. You can add, edit, move, search, filter and export tasks. The data stays in your browser; there is no server.',
+    problem: 'Learn how a database-backed app is structured (create, read, update, delete) without needing a server, and keep it usable on a phone.',
+    details: [
+      'A small promise-based wrapper around IndexedDB: open, getAll, put, delete and clear, each inside its own transaction.',
+      'The screen is redrawn from an in-memory copy of the data, and every change is written to the database first.',
+      'Task titles are inserted as text, never as HTML, so a title cannot inject markup.',
+      'Move buttons and 44px controls make it work without drag and drop, so touch and keyboard users are not left out.',
+    ],
+    outcome: 'A clear first step towards full-stack work: the same create/read/update/delete flow, with the database in the browser. A server version would swap the IndexedDB wrapper for API calls. What I would do differently next time: add sorting inside a column, undo for deletes, and automated tests for the database layer.',
+    techStack: ['JavaScript', 'IndexedDB', 'HTML', 'CSS'],
+    imageUrl: 'images/projects/taskflow.jpg',
+    liveUrl: 'demos/taskflow.html',
+    githubUrl: '',
+    featured: false,
+    displayOrder: 10,
+  },
 ];
 
 // Repositories shown as picture cards in "Find me online". Clicking a card opens the repository on GitHub. The text

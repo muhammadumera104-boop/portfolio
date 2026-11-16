@@ -3,7 +3,7 @@
 // no Firebase, no documents, or no network just means the visitor sees the built-in content.
 import { listProjects, listSkills, listExperiences } from '../firebase/api.js';
 import { firebaseReady } from '../firebase/app.js';
-import { projects as builtIn, now as builtInNow, availability as builtInAvailability } from '../data/content.js';
+import { projects as builtIn, webProjects, now as builtInNow, availability as builtInAvailability } from '../data/content.js';
 import { skillRows } from '../render/sections/about.js';
 import { moreProjectsInner } from '../render/sections/projects.js';
 import { timelineRows, recognitionItems } from '../render/sections/closing.js';
@@ -11,6 +11,7 @@ import { nowHtml } from '../render/sections/now.js';
 import { availabilityHtml } from '../render/sections/availability.js';
 import { AVAILABILITY_DOC_ID, resolveAvailability } from '../shared/availability.js';
 import { NOW_DOC_ID, resolveNow } from '../shared/now.js';
+import { SEO_DOC_ID, cleanSeo } from '../shared/seo-settings.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 
@@ -29,7 +30,11 @@ export async function hydrate() {
   if (projects.status === 'fulfilled' && projects.value.length) {
     const known = new Set(builtIn.map((b) => b.id));
     // The three case studies are written in src/data/content.js and are not overwritten from the database.
-    renderMore(projects.value.filter((p) => !known.has(p.slug)));
+    // Projects added to the code after the database was filled (not in Firestore yet) are kept, so they do not vanish.
+    const live = projects.value.filter((p) => !known.has(p.slug));
+    const have = new Set(projects.value.map((p) => p.slug));
+    const codeOnly = webProjects.filter((p) => !have.has(p.slug));
+    renderMore([...live, ...codeOnly].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)));
   }
 
   if (skills.status === 'fulfilled' && skills.value.length) {
@@ -54,6 +59,13 @@ export async function hydrate() {
     const saved = experiences.value.find((e) => e.id === NOW_DOC_ID);
     const slot = $('[data-now]');
     if (slot && saved) slot.innerHTML = nowHtml(resolveNow(saved, builtInNow), false);
+    // The owner's SEO title and description (the build already put them in the HTML; this keeps the open tab in step).
+    const seo = experiences.value.find((e) => e.id === SEO_DOC_ID);
+    if (seo) {
+      const mine = cleanSeo(seo);
+      if (mine.title) document.title = mine.title;
+      if (mine.description) document.querySelector('meta[name="description"]')?.setAttribute('content', mine.description);
+    }
     // The availability badge in the hero.
     const badge = $('[data-availability]');
     const availability = experiences.value.find((e) => e.id === AVAILABILITY_DOC_ID);

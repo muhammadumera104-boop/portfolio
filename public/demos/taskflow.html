@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TaskFlow — a kanban board with a browser database</title>
+<meta name="description" content="TaskFlow: a kanban board that stores its data in IndexedDB. Add, edit, move, search and export tasks. A demo project by Muhammad Umer Rizwan.">
+<style>
+/* ── Colours: light by default, dark when the visitor's system is dark ── */
+:root{--bg:#f4f1ea;--card:#fff;--fg:#141414;--mut:#5f5a52;--line:#d8d3ca;--acc:#c2341f;--accbg:#f0442e;--onacc:#111;--hi:#b45309;--md:#1d4ed8;--lo:#15803d;--ease:cubic-bezier(.16,1,.3,1);color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#121211;--card:#1b1a18;--fg:#efebe3;--mut:#a39e95;--line:#2f2d2a;--acc:#ff6a52;--hi:#fbbf24;--md:#7aa2ff;--lo:#4ade80}}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.wrap{max-width:1200px;margin:auto;padding:1.2rem clamp(1rem,4vw,2rem) 3rem}
+header{display:flex;flex-wrap:wrap;gap:.8rem 1.5rem;align-items:end;justify-content:space-between;margin-bottom:1.2rem}
+h1{font-size:clamp(1.7rem,5vw,2.6rem);letter-spacing:-.03em;line-height:1.05}h1 span{color:var(--acc)}
+.sub{color:var(--mut);font-size:.9rem;max-width:52ch}
+.bar{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem}
+.bar input,.bar select{min-height:44px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:.5rem .8rem;font-size:1rem}
+.bar input[type=search]{flex:1 1 200px}
+.btn{min-height:44px;padding:.5rem 1rem;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;transition:transform .3s var(--ease),border-color .2s}
+.btn:hover{border-color:var(--acc)}.btn:active{transform:scale(.96)}
+.btn.pri{background:var(--accbg);border-color:var(--accbg);color:var(--onacc);font-weight:600}
+form.add{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.6rem;margin-bottom:1.4rem}
+form.add input,form.add select{min-height:44px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:.5rem .8rem;font-size:1rem;min-width:0}
+@media(max-width:720px){form.add{grid-template-columns:1fr 1fr}form.add input[name=title]{grid-column:1/-1}form.add button{grid-column:1/-1}}
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;align-items:start}
+@media(max-width:820px){.board{grid-template-columns:1fr}}
+.col{background:color-mix(in srgb,var(--card) 60%,var(--bg));border:1px solid var(--line);border-radius:16px;padding:.8rem;min-height:9rem}
+.col.over{border-color:var(--acc);border-style:dashed}
+.col h2{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);display:flex;justify-content:space-between;margin:.2rem .3rem .8rem}
+ul{list-style:none;padding:0;display:grid;gap:.6rem}
+.task{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--md);border-radius:12px;padding:.7rem .8rem;cursor:grab;animation:in .4s var(--ease);touch-action:manipulation}
+.task[data-p=high]{border-left-color:var(--hi)}.task[data-p=low]{border-left-color:var(--lo)}
+.task.drag{opacity:.45}
+.task b{display:block;font-weight:600;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;gap:.4rem .8rem;font-size:.78rem;color:var(--mut);margin-top:.2rem}
+.meta .late{color:var(--acc);font-weight:600}
+.acts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem}
+.acts button{min-height:44px;min-width:44px;padding:.2rem .7rem;border:1px solid var(--line);background:transparent;border-radius:10px;cursor:pointer;font-size:.85rem}
+.acts button:hover{border-color:var(--acc)}
+.empty{color:var(--mut);font-size:.88rem;padding:.6rem .3rem}
+#status{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom));transform:translate(-50%,150%);background:var(--fg);color:var(--bg);padding:.6rem 1.1rem;border-radius:999px;transition:transform .4s var(--ease);font-size:.9rem;z-index:5}
+#status.on{transform:translate(-50%,0)}
+.note{margin-top:2rem;font-size:.82rem;color:var(--mut);max-width:70ch}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+</style></head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>Task<span>Flow</span></h1>
+    <p class="sub">A small kanban board. Your tasks are saved in this browser's IndexedDB database, so they are still here after you close the tab.</p></div>
+    <div class="bar" style="margin:0">
+      <button class="btn" id="export" type="button">Export JSON</button>
+      <button class="btn" id="clear" type="button">Delete all</button>
+    </div>
+  </header>
+
+  <form class="add" id="add" aria-label="Add a task">
+    <label class="sr" for="t">Task title</label>
+    <input id="t" name="title" placeholder="What needs doing?" maxlength="120" required autocomplete="off" enterkeyhint="done">
+    <label class="sr" for="p">Priority</label>
+    <select id="p" name="p"><option value="medium">Medium priority</option><option value="high">High priority</option><option value="low">Low priority</option></select>
+    <label class="sr" for="d">Due date</label>
+    <input id="d" name="due" type="date">
+    <button class="btn pri" type="submit">Add task</button>
+  </form>
+
+  <div class="bar">
+    <label class="sr" for="q">Search tasks</label>
+    <input id="q" type="search" placeholder="Search tasks…" autocomplete="off" enterkeyhint="search">
+    <label class="sr" for="fp">Filter by priority</label>
+    <select id="fp"><option value="">All priorities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+  </div>
+
+  <main class="board" id="board"></main>
+
+  <p class="note">How it works: tasks live in an IndexedDB object store and are read back with a cursor-free <code>getAll()</code>. Drag a card to another column, or use the move buttons (they work with a keyboard and on touch screens). This is a demo: the data never leaves your browser.</p>
+</div>
+<div id="status" role="status" aria-live="polite"></div>
+
+<script>
+/* ───────────────────────── 1. A tiny database layer ─────────────────────────
+   IndexedDB is the browser's built-in database. It is asynchronous, so each call
+   returns a Promise. We wrap the few operations we need so the rest of the app
+   can just say  await db.put(task)  or  await db.all(). */
+const DB_NAME = 'taskflow', STORE = 'tasks';
+const open = () => new Promise((resolve, reject) => {
+  const req = indexedDB.open(DB_NAME, 1);
+  // Runs once, the first time the database is created: make the "tasks" table.
+  req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: 'id' });
+  req.onsuccess = () => resolve(req.result);
+  req.onerror = () => reject(req.error);
+});
+// Run one request inside a transaction and resolve with its result.
+const run = async (mode, make) => {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, mode);
+    const req = make(tx.objectStore(STORE));
+    tx.oncomplete = () => resolve(req?.result);
+    tx.onerror = () => reject(tx.error);
+  });
+};
+const db = {
+  all: () => run('readonly', (s) => s.getAll()),
+  put: (task) => run('readwrite', (s) => s.put(task)),
+  del: (id) => run('readwrite', (s) => s.delete(id)),
+  wipe: () => run('readwrite', (s) => s.clear()),
+};
+
+/* ───────────────────────── 2. App state ───────────────────────── */
+const COLS = [['todo', 'To do'], ['doing', 'In progress'], ['done', 'Done']];
+let tasks = [];                       // a copy of the database kept in memory for fast drawing
+const $ = (sel) => document.querySelector(sel);
+const board = $('#board');
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
+
+// Show a short message at the bottom of the screen.
+let timer;
+function say(text) {
+  const el = $('#status');
+  el.textContent = text; el.classList.add('on');
+  clearTimeout(timer); timer = setTimeout(() => el.classList.remove('on'), 2200);
+}
+
+// Build text nodes with textContent (never innerHTML) so a task title can't inject HTML.
+function el(tag, attrs = {}, text = '') {
+  const node = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, v));
+  if (text) node.textContent = text;
+  return node;
+}
+
+/* ───────────────────────── 3. Drawing the board ───────────────────────── */
+function visible(task) {
+  const q = $('#q').value.trim().toLowerCase();
+  const p = $('#fp').value;
+  return (!q || task.title.toLowerCase().includes(q)) && (!p || task.p === p);
+}
+
+function card(task, colIndex) {
+  const li = el('li', { class: 'task', 'data-id': task.id, 'data-p': task.p, draggable: 'true' });
+  li.append(el('b', {}, task.title));
+  const meta = el('div', { class: 'meta' });
+  meta.append(el('span', {}, task.p + ' priority'));
+  if (task.due) {
+    const late = task.col !== 'done' && task.due < new Date().toISOString().slice(0, 10);
+    meta.append(el('span', late ? { class: 'late' } : {}, (late ? 'Overdue · ' : 'Due ') + task.due));
+  }
+  li.append(meta);
+  const acts = el('div', { class: 'acts' });
+  const add = (label, aria, fn) => { const b = el('button', { type: 'button', 'aria-label': aria }, label); b.addEventListener('click', fn); acts.append(b); };
+  if (colIndex > 0) add('←', 'Move to ' + COLS[colIndex - 1][1], () => move(task.id, COLS[colIndex - 1][0]));
+  if (colIndex < 2) add('→', 'Move to ' + COLS[colIndex + 1][1], () => move(task.id, COLS[colIndex + 1][0]));
+  add('Edit', 'Edit ' + task.title, () => edit(task.id));
+  add('Delete', 'Delete ' + task.title, () => remove(task.id));
+  li.append(acts);
+  // Drag and drop (mouse). Touch users use the arrow buttons above.
+  li.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', task.id); li.classList.add('drag'); });
+  li.addEventListener('dragend', () => li.classList.remove('drag'));
+  return li;
+}
+
+function draw() {
+  board.replaceChildren();
+  COLS.forEach(([key, label], i) => {
+    const items = tasks.filter((t) => t.col === key && visible(t));
+    const section = el('section', { class: 'col', 'aria-label': label });
+    const h = el('h2'); h.append(el('span', {}, label), el('span', {}, String(items.length)));
+    const list = el('ul');
+    if (!items.length) list.append(el('li', { class: 'empty' }, 'Nothing here.'));
+    items.forEach((t) => list.append(card(t, i)));
+    section.append(h, list);
+    // A column accepts a dropped card.
+    section.addEventListener('dragover', (e) => { e.preventDefault(); section.classList.add('over'); });
+    section.addEventListener('dragleave', () => section.classList.remove('over'));
+    section.addEventListener('drop', (e) => { e.preventDefault(); section.classList.remove('over'); move(e.dataTransfer.getData('text/plain'), key); });
+    board.append(section);
+  });
+}
+
+/* ───────────────────────── 4. Actions (each one saves, then redraws) ───────────────────────── */
+async function move(id, col) {
+  const task = tasks.find((t) => t.id === id);
+  if (!task || task.col === col) return;
+  task.col = col;
+  await db.put(task); draw(); say('Moved to ' + COLS.find((c) => c[0] === col)[1]);
+}
+async function remove(id) {
+  tasks = tasks.filter((t) => t.id !== id);
+  await db.del(id); draw(); say('Task deleted');
+}
+async function edit(id) {
+  const task = tasks.find((t) => t.id === id);
+  const title = prompt('Edit the task', task.title);
+  if (title === null) return;
+  const clean = title.trim().slice(0, 120);
+  if (!clean) return say('A task needs a title');
+  task.title = clean;
+  await db.put(task); draw(); say('Task updated');
+}
+
+$('#add').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const title = String(f.get('title')).trim().slice(0, 120);
+  if (!title) return;
+  const task = { id: uid(), title, p: f.get('p'), due: f.get('due') || '', col: 'todo', created: Date.now() };
+  tasks.push(task);
+  await db.put(task);
+  e.target.reset(); draw(); say('Task added'); $('#t').focus();
+});
+$('#q').addEventListener('input', draw);
+$('#fp').addEventListener('change', draw);
+$('#export').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
+  const a = el('a', { href: URL.createObjectURL(blob), download: 'taskflow-export.json' });
+  a.click(); URL.revokeObjectURL(a.href); say('Exported ' + tasks.length + ' tasks');
+});
+$('#clear').addEventListener('click', async () => {
+  if (!tasks.length || !confirm('Delete every task? This cannot be undone.')) return;
+  tasks = []; await db.wipe(); draw(); say('All tasks deleted');
+});
+
+/* ───────────────────────── 5. Start ───────────────────────── */
+(async function start() {
+  try {
+    tasks = await db.all();
+    if (!tasks.length) {
+      // First visit: three sample tasks so the board is not empty.
+      tasks = [
+        { id: uid(), title: 'Read the README', p: 'low', due: '', col: 'done', created: 1 },
+        { id: uid(), title: 'Drag me to another column', p: 'medium', due: '', col: 'doing', created: 2 },
+        { id: uid(), title: 'Add your own task above', p: 'high', due: '', col: 'todo', created: 3 },
+      ];
+      await Promise.all(tasks.map(db.put));
+    }
+  } catch (err) {
+    say('Your browser blocked the database, so tasks will not be saved.');
+    console.warn('[taskflow]', err);
+  }
+  draw();
+})();
+</script>
+</body></html>

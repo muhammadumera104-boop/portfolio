@@ -10,13 +10,14 @@ import * as api from '../firebase/admin-api.js';
 import { createEditor } from './editor.js';
 import { toast } from '../shared/toast.js';
 import {
-  postSchema, projectSchema, skillSchema, experienceSchema, nowSchema, availabilitySchema, fieldErrors,
+  postSchema, projectSchema, seoSchema, skillSchema, experienceSchema, nowSchema, availabilitySchema, fieldErrors,
 } from '../shared/schemas.js';
 import { slugify, readingTime, makeExcerpt, formatDate, toDate, parseCsv, parseLines } from '../shared/utils.js';
 import { esc, list } from '../render/util.js';
 import { NOW_DOC_ID, cleanNow } from '../shared/now.js';
 import { now as nowDefault, availability as availabilityDefault } from '../data/content.js';
 import { AVAILABILITY_DOC_ID, cleanAvailability, availabilityLabel } from '../shared/availability.js';
+import { SEO_DOC_ID, HOME_SEO, TITLE_MAX, DESCRIPTION_MAX, cleanSeo, resolveSeo } from '../shared/seo-settings.js';
 import { suggestEmail } from '../shared/email-check.js';
 import {
   parseVideoLines, formatVideoLines, parseResourceLines, formatResourceLines, parseScreenshotLines, formatScreenshotLines,
@@ -28,7 +29,7 @@ const state = { user: null, tab: 'overview', editor: null };
 
 const TABS = [
   ['overview', 'Overview'], ['blog', 'Blog'], ['projects', 'Projects'], ['skills', 'Skills'],
-  ['experiences', 'Education'], ['now', 'Now'], ['availability', 'Availability'], ['messages', 'Messages'], ['comments', 'Comments'],
+  ['experiences', 'Education'], ['now', 'Now'], ['availability', 'Availability'], ['seo', 'SEO'], ['messages', 'Messages'], ['comments', 'Comments'],
 ];
 
 // ── helpers ─────────────────────────────────────────────────
@@ -127,7 +128,7 @@ function go(tab) {
   main.innerHTML = '<p class="admin__loading">Loading…</p>';
   const views = {
     overview: viewOverview, blog: viewBlog, projects: () => viewCrud('projects'), skills: () => viewCrud('skills'),
-    experiences: () => viewCrud('experiences'), now: viewNow, availability: viewAvailability, messages: viewMessages, comments: viewComments,
+    experiences: () => viewCrud('experiences'), now: viewNow, availability: viewAvailability, seo: viewSeo, messages: viewMessages, comments: viewComments,
   };
   Promise.resolve(views[tab](main)).catch((error) => {
     console.error(error);
@@ -275,7 +276,7 @@ const CRUD = {
 
 async function viewCrud(name) {
   const cfg = CRUD[name];
-  const items = (await api.listAll(name)).filter((d) => !['now', 'availability'].includes(d.kind)).sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+  const items = (await api.listAll(name)).filter((d) => !['now', 'availability', 'seo'].includes(d.kind)).sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
   state.items = items;
   document.getElementById('admin-main').innerHTML = `
     <header class="admin__head"><h1>${cfg.title}</h1><button type="button" class="btn btn--ink btn--sm" data-new-item="${name}">Add new</button></header>
@@ -369,6 +370,50 @@ async function submitNow(form) {
   }
   showErrors(form, {});
   await act(() => api.saveDoc('experiences', NOW_DOC_ID, { kind: 'now', ...result.data }), 'Saved. Visitors see it now; search engines see it after the next deploy.');
+}
+
+// ── SEO: the home page's search-result title and description ──
+// One document (experiences/seo). The security rules already let only the owner write to `experiences`.
+// Visitors' browsers pick it up at once; search engines read it from the page HTML, so it needs a new deploy.
+const seoPreview = (title, description) => `
+  <p class="rows__sub">How it can look in Google (the real result may differ):</p>
+  <div class="panel" data-seo-preview aria-live="polite">
+    <p style="color:var(--accent-text);font-size:1.15rem;margin:0">${esc(title)}</p>
+    <p style="color:var(--fg-muted);font-size:.85rem;margin:.1rem 0 .4rem">your-site.com</p>
+    <p style="margin:0;font-size:.9rem">${esc(description)}</p>
+  </div>`;
+
+async function viewSeo(main) {
+  const saved = (await api.listAll('experiences')).find((d) => d.id === SEO_DOC_ID);
+  const own = cleanSeo(saved);
+  const shown = resolveSeo(saved, HOME_SEO);
+  main.innerHTML = `
+    <header class="admin__head"><h1>SEO</h1></header>
+    <p class="panel">The title and description Google shows for your home page. Put your full name near the start of the title (for example “Muhammad Umer Rizwan — Software Developer in Karachi”) and write the description for a person, not a robot. Leave a box empty to use the built-in text. Search engines see a change after the next deploy.${saved ? '' : ' You have not saved anything yet, so the built-in text is shown below.'}</p>
+    <form class="form" data-seo-form novalidate>
+      <div class="field"><label for="s-title">Page title (up to ${TITLE_MAX} characters)</label><input id="s-title" name="title" maxlength="${TITLE_MAX}" value="${esc(own.title)}" placeholder="${esc(HOME_SEO.title)}"><p class="rows__sub" data-count="title">${shown.title.length}/${TITLE_MAX}</p><p class="field__error" data-err="title"></p></div>
+      <div class="field"><label for="s-desc">Description (up to ${DESCRIPTION_MAX} characters)</label><textarea id="s-desc" name="description" rows="3" maxlength="${DESCRIPTION_MAX}" placeholder="${esc(HOME_SEO.description)}">${esc(own.description)}</textarea><p class="rows__sub" data-count="description">${shown.description.length}/${DESCRIPTION_MAX}</p><p class="field__error" data-err="description"></p></div>
+      <div data-seo-slot>${seoPreview(shown.title, shown.description)}</div>
+      <div class="form__actions"><button class="btn btn--ink" type="submit">Save</button></div>
+    </form>`;
+  // Update the counters and the preview while typing.
+  const form = main.querySelector('[data-seo-form]');
+  form.addEventListener('input', () => {
+    const now = resolveSeo({ title: form.elements.title.value, description: form.elements.description.value }, HOME_SEO);
+    form.querySelector('[data-count="title"]').textContent = `${form.elements.title.value.trim().length || now.title.length}/${TITLE_MAX}`;
+    form.querySelector('[data-count="description"]').textContent = `${form.elements.description.value.trim().length || now.description.length}/${DESCRIPTION_MAX}`;
+    form.querySelector('[data-seo-slot]').innerHTML = seoPreview(now.title, now.description);
+  });
+}
+
+async function submitSeo(form) {
+  const result = seoSchema.safeParse({ title: form.elements.title.value, description: form.elements.description.value });
+  if (!result.success) {
+    showErrors(form, fieldErrors(result.error));
+    return toast('Please fix the highlighted fields.', 'error');
+  }
+  showErrors(form, {});
+  await act(() => api.saveDoc('experiences', SEO_DOC_ID, { kind: 'seo', ...result.data }), 'Saved. Search engines see it after the next deploy.');
 }
 
 // ── Availability badge ──────────────────────────────────────
@@ -518,6 +563,7 @@ root.addEventListener('submit', async (event) => {
     else if (form.matches('[data-crud-form]')) await submitCrud(form);
     else if (form.matches('[data-now-form]')) await submitNow(form);
     else if (form.matches('[data-availability-form]')) await submitAvailability(form);
+    else if (form.matches('[data-seo-form]')) await submitSeo(form);
   } finally {
     button.disabled = false;
   }
