@@ -20,6 +20,7 @@ import { initPathfinder } from './scripts/pathfinder.js';
 import { initHeap } from './scripts/heap.js';
 import { initMotion } from './scripts/motion.js';
 import { initMotionExtras } from './scripts/motion-extras.js';
+import { initFx } from './scripts/fx.js';
 import { initMoreProjects } from './scripts/more-projects.js';
 import { initJourney } from './scripts/journey.js';
 import { initHeroFx } from './scripts/hero-fx.js';
@@ -27,7 +28,7 @@ import { initPalette } from './scripts/palette.js';
 import { initLang } from './scripts/lang.js';
 
 // Each feature starts independently, so one failure can't break the rest of the page.
-const features = [initTheme, initNav, initTerminal, initContactForm, initPathfinder, initHeap, initMoreProjects, initJourney, initHeroFx, initPalette, initMotion, initMotionExtras, initLang];
+const features = [initTheme, initNav, initTerminal, initContactForm, initPathfinder, initHeap, initMoreProjects, initJourney, initHeroFx, initPalette, initMotion, initMotionExtras, initFx, initLang];
 features.forEach((init) => {
   try {
     init();
